@@ -1,7 +1,6 @@
-import { TraktAPI } from "@/lib/trakt/trakt";
+import { TraktAPI }  from "@/lib/trakt/Trakt";
 import { NextResponse } from "next/server";
-import { json } from "stream/consumers";
-
+import { Collection } from "@/lib/mongo/mongo";
 export async function GET(
   request: Request,
   {
@@ -16,13 +15,25 @@ export async function GET(
   // const json = JSON.parse(decrypted);
   // const token = json.access_token;
   try {
-    const days_ago = 0
-    const period = 7
-    const trakt = new TraktAPI();
-    const shows = await trakt.get_shows_calendar(days_ago, period);
-    return NextResponse.json(shows);
+    const days_ago = 1
+    const period = 5
+    const col = await Collection("users");
+    const user = await col.findOne({ slug: params.uid });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    const token = user.access_token.access_token;
+    const trakt = new TraktAPI(token);
+    return NextResponse.json({
+      data: await trakt.Shows.getShowsBatch(days_ago, period),
+      type: "shows",
+      status: "success",
+    });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error }, { status: 500 });
+    console.error(error instanceof Error ? error.message : error);
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : error,
+      status: "error",
+    });
   }
 }

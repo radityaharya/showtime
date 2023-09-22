@@ -27,24 +27,30 @@ export class BaseUtil {
     query?: any
   ) {
     const url = new URL(path, this.api_url);
+    
     if (query) {
-      Object.keys(query).forEach((key) =>
-        url.searchParams.append(key, query[key])
-      );
+      const searchParams = new URLSearchParams(query);
+      url.search = searchParams.toString();
     }
+  
     const response = await fetch(url.toString(), {
       method,
       headers: {
         "Content-Type": "application/json",
         "trakt-api-key": this.client_id,
         "trakt-api-version": "2",
-        ...(this.oauth_token
-          ? { authorization: `Bearer ${this.oauth_token}` }
-          : {}),
+        ...(this.oauth_token ? { authorization: `Bearer ${this.oauth_token}` } : {}),
         ...headers,
       },
-      body: JSON.stringify(body),
+      body: body && typeof body !== "string" ? JSON.stringify(body) : body,
     });
-    return response.json();
+  
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return response.json();
+    }
+  
+    return response.text(); // or handle non-JSON response
   }
+  
 }

@@ -34,16 +34,16 @@ export async function GET(
 
     const cached = await redis.get(key);
 
-    if (cached) {
-      console.log(`cached: ${key}`);
-      return NextResponse.json(JSON.parse(cached), {
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "s-maxage=1200 , stale-while-revalidate",
-          "X-Redis-Cache": "HIT",
-        },
-      });
-    }
+    // if (cached) {
+    //   console.log(`cached: ${key}`);
+    //   return NextResponse.json(JSON.parse(cached), {
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       "Cache-Control": "s-maxage=1200 , stale-while-revalidate",
+    //       "X-Redis-Cache": "HIT",
+    //     },
+    //   });
+    // }
 
     const token = user.access_token.access_token;
     const trakt = new TraktAPI(token);

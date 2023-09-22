@@ -2,7 +2,8 @@ import { BaseUtil } from "./Base";
 import { MAX_DAYS_AGO, MAX_PERIOD } from "./Base";
 import ical from "ical-generator";
 import dayjs from "dayjs";
-import utc from 'dayjs/plugin/utc';
+import utc from "dayjs/plugin/utc";
+
 dayjs.extend(utc);
 
 interface Episode {
@@ -90,104 +91,85 @@ export class ShowsUtil extends BaseUtil {
       });
   }
 
-  async getShowsBatch(daysAgo: number, period: number): Promise<MappedEpisode[]> {
+  async getShowsBatch(
+    daysAgo: number,
+    period: number
+  ): Promise<MappedEpisode[]> {
     if (daysAgo > MAX_DAYS_AGO || period > MAX_PERIOD) {
       throw new Error(
         `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`
       );
     }
 
-    const cache: { [key: string]: Episode[] } = {};
+    const startDate = dayjs().subtract(daysAgo, "day");
 
-    const getEpisodes = async (startDate: string, days: number) => {
-      console.log(`getEpisodes: startDate: ${startDate}, days: ${days}`);
-      const cacheKey = `${startDate}-${days}`;
-      if (cache[cacheKey]) {
-        return cache[cacheKey];
-      }
+    const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
       const response = await this._request(
         "/calendars/my/shows",
         "GET",
         undefined,
         undefined,
         {
-          start_date: startDate,
+          start_date: startDate.format("YYYY-MM-DD"),
           days,
           extended: "full",
         }
       );
-      cache[cacheKey] = response;
       return response;
     };
 
-    const startDate = dayjs().subtract(daysAgo, "day").format("YYYY-MM-DD");
-
-    const entries: Episode[] = [];
     const batchSize = 20;
     const numBatches = Math.ceil(period / batchSize);
     const requests = [];
+
     for (let i = 0; i < numBatches; i++) {
-      const currentDate = dayjs(startDate)
-        .add(i * batchSize, "day")
-        .format("YYYY-MM-DD");
-      const days = Math.min(batchSize, period - i * batchSize);
-      requests.push(getEpisodes(currentDate, days));
+      requests.push(
+        getEpisodes(
+          startDate.add(i * batchSize, "day"),
+          Math.min(batchSize, period - i * batchSize)
+        )
+      );
     }
+
     const responses = await Promise.all(requests);
-    responses.forEach((response) => {
-      entries.push(...response);
-    });
+    const entries = responses.flat();
 
-    const groupedOutput: MappedEpisode[] = entries.reduce(
-      (acc: MappedEpisode[], item: Episode) => {
-        const dateStr = dayjs(item.first_aired)
-          .utc()
-          .format("ddd, DD MMM YYYY");
-        const found = acc.find((groupedItem) => groupedItem.dateStr === dateStr);
-        if (found) {
-          found.items.push({
-            show: item.show.title,
-            season: item.episode.season,
-            number: item.episode.number,
-            title: item.episode.title,
-            overview: item.episode.overview,
-            network: item.show.network,
-            runtime: item.episode.runtime || 30, // Set default runtime if null or 0
-            background: item.show.images?.fanart?.full,
-            logo: item.show.images?.logo?.full,
-            airsAt: dayjs(item.first_aired).utc().format(),
-            airsAtUnix: dayjs(item.first_aired).unix(),
-            ids: item.show.ids,
-          });
-        } else {
-          acc.push({
-            dateStr,
-            dateUnix: dayjs(item.first_aired).unix(),
-            items: [
-              {
-                show: item.show.title,
-                season: item.episode.season,
-                number: item.episode.number,
-                title: item.episode.title,
-                overview: item.episode.overview,
-                network: item.show.network,
-                runtime: item.episode.runtime || 30, // Set default runtime if null or 0
-                background: item.show.images?.fanart?.full,
-                logo: item.show.images?.logo?.full,
-                airsAt: dayjs(item.first_aired).utc().format(),
-                airsAtUnix: dayjs(item.first_aired).unix(),
-                ids: item.show.ids,
-              },
-            ],
-          });
-        }
-        return acc;
-      },
-      []
-    );
+    const groupedOutput = new Map<string, MappedEpisode>();
+    for (const item of entries) {
+      const date = dayjs(item.first_aired).utc();
+      const dateStr = date.format("ddd, DD MMM YYYY");
+      const dateUnix = date.unix();
+      const key = dateStr;
 
-    return groupedOutput;
+      const mappedEpisode = {
+        show: item.show.title,
+        season: item.episode.season,
+        number: item.episode.number,
+        title: item.episode.title,
+        overview: item.episode.overview,
+        network: item.show.network,
+        runtime: item.episode.runtime || 30,
+        background: item.show.images?.fanart?.full,
+        logo: item.show.images?.logo?.full,
+        airsAt: date.format(),
+        airsAtUnix: dateUnix,
+        ids: item.show.ids,
+      };
+
+      if (groupedOutput.has(key)) {
+        groupedOutput.get(key)!.items.push(mappedEpisode);
+      } else {
+        groupedOutput.set(key, {
+          dateStr,
+          dateUnix,
+          items: [mappedEpisode],
+        });
+      }
+    }
+
+    return Array.from(groupedOutput.values());
   }
+
   async getShowsCalendar(days_ago = 30, period = 90) {
     let episodes = await this.getShowsBatch(days_ago, period);
     console.log(JSON.stringify(episodes));

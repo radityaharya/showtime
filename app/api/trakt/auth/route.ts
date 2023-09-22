@@ -1,7 +1,4 @@
-import { TraktAPI } from "@/lib/trakt/trakt";
 import { NextResponse } from "next/server";
-
-
 
 // https://trakt.tv/oauth/authorize?response_type=code&client_id={CLIENT_ID}&redirect_uri={os.environ.get("HOST")}
 

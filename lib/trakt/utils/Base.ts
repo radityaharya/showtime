@@ -8,7 +8,7 @@ export class BaseUtil {
   private client_id: string;
   private client_secret: string;
   private oauth_token?: string;
-  private tmdb: MovieDB;
+  public tmdb: MovieDB;
   private api_url: string;
 
   constructor(oauth_token?: string) {

@@ -6,50 +6,17 @@ import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 
-interface Episode {
-  first_aired: string;
-  show: {
-    title: string;
-    network: string;
-    images: {
-      fanart: {
-        full: string;
-      };
-      logo: {
-        full: string;
-      };
-    };
-    ids: {
-      trakt: number | null;
-      slug: string | null;
-      tvdb: number | null;
-      imdb: string | null;
-      tmdb: number | null;
-      tvrage: number | null;
-    };
-  };
-  episode: {
-    season: number;
-    number: number;
-    title: string;
-    overview: string;
-    runtime: number | null;
-  };
-}
-
-interface MappedEpisode {
+interface MappedMovies {
   dateStr: string;
   dateUnix: number;
   items: {
     show: string;
-    season: number;
-    number: number;
     title: string;
     overview: string;
-    network: string;
     runtime: number;
-    background: string | undefined;
-    logo: string | undefined;
+    // background: string | undefined;
+    // logo: string | undefined;
+    network: string;
     airsAt: string;
     airsAtUnix: number;
     ids: {
@@ -63,8 +30,8 @@ interface MappedEpisode {
   }[];
 }
 
-export class ShowsUtil extends BaseUtil {
-  getShowImages(
+export class MoviesUtil extends BaseUtil {
+  getMovieImages(
     showId: number | string,
     callback: (response: Response | undefined) => void,
   ) {
@@ -76,7 +43,7 @@ export class ShowsUtil extends BaseUtil {
       })
       .then((response: any) => {
         const backdropPath = response.data.backdrops[0].file_path;
-        fetch(`https://image.tmdb.org/t/p/original${backdropPath}`)
+        fetch(`https://image.tmdb.org/m/p/original${backdropPath}`)
           .then((response: Response) => {
             callback(response);
           })
@@ -91,10 +58,10 @@ export class ShowsUtil extends BaseUtil {
       });
   }
 
-  async getShowsBatch(
+  async getMoviesBatch(
     daysAgo: number,
     period: number,
-  ): Promise<MappedEpisode[]> {
+  ): Promise<MappedMovies[]> {
     if (daysAgo > MAX_DAYS_AGO || period > MAX_PERIOD) {
       throw new Error(
         `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`,
@@ -105,7 +72,7 @@ export class ShowsUtil extends BaseUtil {
 
     const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
       const response = await this._request(
-        "/calendars/my/shows",
+        "/calendars/my/movies",
         "GET",
         undefined,
         undefined,
@@ -134,35 +101,34 @@ export class ShowsUtil extends BaseUtil {
     const responses = await Promise.all(requests);
     const entries = responses.flat();
 
-    const groupedOutput = new Map<string, MappedEpisode>();
+    const groupedOutput = new Map<string, MappedMovies>();
     for (const item of entries) {
       const date = dayjs(item.first_aired).utc();
       const dateStr = date.format("ddd, DD MMM YYYY");
       const dateUnix = date.unix();
       const key = dateStr;
 
-      const mappedEpisode = {
-        show: item.show.title,
-        season: item.episode.season,
-        number: item.episode.number,
-        title: item.episode.title,
-        overview: item.episode.overview,
-        network: item.show.network,
-        runtime: item.episode.runtime || 30,
-        background: item.show.images?.fanart?.full,
-        logo: item.show.images?.logo?.full,
+      console.log(item);
+      const mappedMovie = {
+        show: item.movie.title,
+        title: item.movie.title,
+        overview: item.movie.overview,
+        runtime: item.movie.runtime || 30,
+        // background: item.movie.images?.fanart?.full,
+        // logo: item.show.images?.logo?.full,
+        network: item.movie.tagline,
         airsAt: date.format(),
         airsAtUnix: dateUnix,
-        ids: item.show.ids,
+        ids: item.movie.ids,
       };
 
       if (groupedOutput.has(key)) {
-        groupedOutput.get(key)!.items.push(mappedEpisode);
+        groupedOutput.get(key)!.items.push(mappedMovie);
       } else {
         groupedOutput.set(key, {
           dateStr,
           dateUnix,
-          items: [mappedEpisode],
+          items: [mappedMovie],
         });
       }
     }
@@ -170,46 +136,41 @@ export class ShowsUtil extends BaseUtil {
     return Array.from(groupedOutput.values());
   }
 
-  async getShowsCalendar(days_ago = 30, period = 90) {
-    let episodes = await this.getShowsBatch(days_ago, period);
-    console.log(JSON.stringify(episodes));
+  async getMoviesCalendar(days_ago = 30, period = 90) {
+    let entries = await this.getMoviesBatch(days_ago, period);
 
     // flatten mapped episodes to single array
-    const flattenedEpisodes = [];
-    for (const episode of episodes) {
-      flattenedEpisodes.push(...episode.items);
+    const flattenedEntries = [];
+    for (const entry of entries) {
+      flattenedEntries.push(...entry.items);
     }
 
     const cal = ical({ name: "Trakt.tv Calendar" });
-    for (const episode of flattenedEpisodes) {
-      if (episode.runtime === null || episode.runtime === 0) {
-        episode.runtime = 30;
+    for (const entry of flattenedEntries) {
+      if (entry.runtime === null || entry.runtime === 0) {
+        entry.runtime = 120;
       }
-      console.log(episode ? episode.ids : "no show");
-      const show_ids = episode.ids;
+      console.log(entry ? entry.ids : "no show");
+      const movie_ids = entry.ids;
       let show_detail;
-      if (show_ids.tmdb) {
-        show_detail = await this.tmdb.tv.getDetails({
+      if (movie_ids.tmdb) {
+        show_detail = await this.tmdb.movie.getDetails({
           pathParameters: {
-            tv_id: show_ids.tmdb,
+            movie_id: movie_ids.tmdb,
           },
         });
       }
 
-      const summary = `${episode.title} - S${episode.season
-        .toString()
-        .padStart(2, "0")}E${episode.number.toString().padStart(2, "0")}`;
+      const summary = `${entry.title}`;
 
-      const description = episode.overview
-        ? `${episode.title}\n${episode.overview}`
-        : episode.title;
+      const description = entry.overview
+        ? `${entry.title}\n${entry.overview}`
+        : entry.title;
       cal.createEvent({
-        start: new Date(episode.airsAtUnix * 1000),
+        start: new Date(entry.airsAtUnix * 1000),
         summary: summary,
         description: description,
-        location: show_detail
-          ? show_detail.data.networks[0].name
-          : episode.network,
+        location: entry.network,
       });
     }
     return cal;

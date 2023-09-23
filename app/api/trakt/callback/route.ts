@@ -9,7 +9,7 @@ export async function GET(
     params,
   }: {
     params: { code: string };
-  }
+  },
 ) {
   const code = request.url.split("?code=")[1];
   const data = {
@@ -43,7 +43,7 @@ export async function GET(
           $set: {
             access_token: access_token,
           },
-        }
+        },
       );
     } else {
       await col.insertOne({
@@ -58,10 +58,10 @@ export async function GET(
         error: error instanceof Error ? error.message : error,
         status: "error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
   return NextResponse.redirect(
-    new URL("/", request.url.split("/callback")[0]).href
+    new URL("/", request.url.split("/callback")[0]).href,
   );
 }

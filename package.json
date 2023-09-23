@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check": "bunx prettier . --write && next lint --no-cache"
   },
   "dependencies": {
     "@types/node": "20.6.0",

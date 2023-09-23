@@ -1,7 +1,7 @@
 import { TraktAPI } from "@/lib/trakt/Trakt";
 import { NextResponse } from "next/server";
 import { Collection } from "@/lib/mongo/mongo";
-const Redis = require("ioredis");
+// const Redis = require("ioredis");
 
 export async function GET(
   request: Request,
@@ -9,7 +9,7 @@ export async function GET(
     params,
   }: {
     params: { uid: string };
-  }
+  },
 ) {
   // const decrypted = decrypt(encryptedToken);
   // const json = JSON.parse(decrypted);
@@ -22,17 +22,22 @@ export async function GET(
       ? parseInt(request.url.split("period=")[1].split("&")[0])
       : 5;
 
+    console.log(`days_ago: ${days_ago} | period: ${period}`);
+    if (![days_ago, period].every(Number.isInteger)) {
+      throw new Error("days_ago and period must be integers");
+    }
+
     const col = await Collection("users");
     const user = await col.findOne({ slug: params.uid });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const key = `trakt-${request.url.split("/api")[1]}`;
+    // const key = `trakt-${request.url.split("/api")[1]}`;
 
-    const redis = new Redis(process.env.REDIS_URL);
+    // const redis = new Redis(process.env.REDIS_URL);
 
-    const cached = await redis.get(key);
+    // const cached = await redis.get(key);
 
     // if (cached) {
     //   console.log(`cached: ${key}`);
@@ -54,7 +59,7 @@ export async function GET(
       status: "success",
     };
 
-    await redis.set(key, JSON.stringify(body), "EX", 1200);
+    // await redis.set(key, JSON.stringify(body), "EX", 1200);
 
     return NextResponse.json(body, {
       headers: {

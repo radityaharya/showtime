@@ -1,7 +1,7 @@
 import ical from "ical-generator";
 import MovieDB from "node-themoviedb";
 
-export const MAX_DAYS_AGO = 30;
+export const MAX_DAYS_AGO = 120;
 export const MAX_PERIOD = 90;
 
 export class BaseUtil {
@@ -24,33 +24,34 @@ export class BaseUtil {
     method: "GET" | "POST" | "PUT" | "DELETE",
     body?: any,
     headers?: any,
-    query?: any
+    query?: any,
   ) {
     const url = new URL(path, this.api_url);
-    
+
     if (query) {
       const searchParams = new URLSearchParams(query);
       url.search = searchParams.toString();
     }
-  
+
     const response = await fetch(url.toString(), {
       method,
       headers: {
         "Content-Type": "application/json",
         "trakt-api-key": this.client_id,
         "trakt-api-version": "2",
-        ...(this.oauth_token ? { authorization: `Bearer ${this.oauth_token}` } : {}),
+        ...(this.oauth_token
+          ? { authorization: `Bearer ${this.oauth_token}` }
+          : {}),
         ...headers,
       },
       body: body && typeof body !== "string" ? JSON.stringify(body) : body,
     });
-  
+
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       return response.json();
     }
-  
+
     return response.text(); // or handle non-JSON response
   }
-  
 }

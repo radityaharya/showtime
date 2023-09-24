@@ -1,6 +1,3 @@
-import ical from "ical-generator";
-import MovieDB from "node-themoviedb";
-
 export const MAX_DAYS_AGO = 120;
 export const MAX_PERIOD = 90;
 
@@ -8,14 +5,12 @@ export class BaseUtil {
   private client_id: string;
   private client_secret: string;
   private oauth_token?: string;
-  public tmdb: MovieDB;
   private api_url: string;
 
   constructor(oauth_token?: string) {
     this.client_id = process.env.TRAKT_CLIENT_ID!;
     this.client_secret = process.env.TRAKT_CLIENT_SECRET!;
     this.oauth_token = oauth_token;
-    this.tmdb = new MovieDB(process.env.TMDB_API_KEY!);
     this.api_url = "https://api.trakt.tv";
   }
 

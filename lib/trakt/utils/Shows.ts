@@ -3,39 +3,9 @@ import { MAX_DAYS_AGO, MAX_PERIOD } from "./Base";
 import ical from "ical-generator";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { TmdbAPI } from "@/lib/tmdb/Tmdb";
 
 dayjs.extend(utc);
-
-interface Episode {
-  first_aired: string;
-  show: {
-    title: string;
-    network: string;
-    images: {
-      fanart: {
-        full: string;
-      };
-      logo: {
-        full: string;
-      };
-    };
-    ids: {
-      trakt: number | null;
-      slug: string | null;
-      tvdb: number | null;
-      imdb: string | null;
-      tmdb: number | null;
-      tvrage: number | null;
-    };
-  };
-  episode: {
-    season: number;
-    number: number;
-    title: string;
-    overview: string;
-    runtime: number | null;
-  };
-}
 
 interface MappedEpisode {
   dateStr: string;
@@ -64,33 +34,6 @@ interface MappedEpisode {
 }
 
 export class ShowsUtil extends BaseUtil {
-  getShowImages(
-    showId: number | string,
-    callback: (response: Response | undefined) => void,
-  ) {
-    this.tmdb.tv
-      .getImages({
-        pathParameters: {
-          tv_id: showId,
-        },
-      })
-      .then((response: any) => {
-        const backdropPath = response.data.backdrops[0].file_path;
-        fetch(`https://image.tmdb.org/t/p/original${backdropPath}`)
-          .then((response: Response) => {
-            callback(response);
-          })
-          .catch((error: any) => {
-            console.log(error);
-            callback(undefined);
-          });
-      })
-      .catch((error: any) => {
-        console.log(error);
-        callback(undefined);
-      });
-  }
-
   async getShowsBatch(
     daysAgo: number,
     period: number,
@@ -102,7 +45,7 @@ export class ShowsUtil extends BaseUtil {
     }
 
     const startDate = dayjs().subtract(daysAgo, "day");
-
+    const tmdb = new TmdbAPI();
     const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
       const response = await this._request(
         "/calendars/my/shows",
@@ -112,9 +55,22 @@ export class ShowsUtil extends BaseUtil {
         {
           start_date: startDate.format("YYYY-MM-DD"),
           days,
-          extended: "full",
+          // extended: "full",
         },
       );
+
+      const imagePromises = response.map(
+        async (item: { show: { ids: any; images: any } }) => {
+          const show_ids = item.show.ids;
+          if (show_ids.tmdb) {
+            const images = await tmdb.tv.getImages(show_ids.tmdb);
+            item.show.images = images;
+          }
+        },
+      );
+
+      await Promise.all(imagePromises);
+
       return response;
     };
 
@@ -149,8 +105,8 @@ export class ShowsUtil extends BaseUtil {
         overview: item.episode.overview,
         network: item.show.network,
         runtime: item.episode.runtime || 30,
-        background: item.show.images?.fanart?.full,
-        logo: item.show.images?.logo?.full,
+        background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
+        logo: `https://image.tmdb.org/t/p/w500${item.show.images?.logos?.[0]?.file_path}`,
         airsAt: date.format(),
         airsAtUnix: dateUnix,
         ids: item.show.ids,
@@ -172,46 +128,47 @@ export class ShowsUtil extends BaseUtil {
 
   async getShowsCalendar(days_ago = 30, period = 90) {
     let episodes = await this.getShowsBatch(days_ago, period);
-    console.log(JSON.stringify(episodes));
 
-    // flatten mapped episodes to single array
     const flattenedEpisodes = [];
     for (const episode of episodes) {
       flattenedEpisodes.push(...episode.items);
     }
 
-    const cal = ical({ name: "Trakt.tv Calendar" });
+    const cal = ical({ name: "Trakt.tv Shows Calendar" });
+    const tmdb = new TmdbAPI();
+    const promises = [];
     for (const episode of flattenedEpisodes) {
       if (episode.runtime === null || episode.runtime === 0) {
         episode.runtime = 30;
       }
-      console.log(episode ? episode.ids : "no show");
       const show_ids = episode.ids;
-      let show_detail;
+      let show_detail_promise;
       if (show_ids.tmdb) {
-        show_detail = await this.tmdb.tv.getDetails({
-          pathParameters: {
-            tv_id: show_ids.tmdb,
-          },
-        });
+        show_detail_promise = tmdb.tv.getDetails(show_ids.tmdb);
+      } else {
+        show_detail_promise = Promise.resolve(null);
       }
+      promises.push(
+        show_detail_promise.then((show_detail) => {
+          const summary = `${episode.show} - S${episode.season
+            .toString()
+            .padStart(2, "0")}E${episode.number.toString().padStart(2, "0")}`;
 
-      const summary = `${episode.title} - S${episode.season
-        .toString()
-        .padStart(2, "0")}E${episode.number.toString().padStart(2, "0")}`;
-
-      const description = episode.overview
-        ? `${episode.title}\n${episode.overview}`
-        : episode.title;
-      cal.createEvent({
-        start: new Date(episode.airsAtUnix * 1000),
-        summary: summary,
-        description: description,
-        location: show_detail
-          ? show_detail.data.networks[0].name
-          : episode.network,
-      });
+          const description = episode.overview
+            ? `${episode.title}\n${episode.overview}`
+            : episode.title;
+          cal.createEvent({
+            start: new Date(episode.airsAtUnix * 1000),
+            summary: summary,
+            description: description,
+            location: show_detail
+              ? show_detail.networks[0].name
+              : episode.network,
+          });
+        }),
+      );
     }
+    await Promise.all(promises);
     return cal;
   }
 }

@@ -3,6 +3,7 @@ import { MAX_DAYS_AGO, MAX_PERIOD } from "./Base";
 import ical from "ical-generator";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { TmdbAPI } from "@/lib/tmdb/Tmdb";
 
 dayjs.extend(utc);
 
@@ -31,33 +32,6 @@ interface MappedMovies {
 }
 
 export class MoviesUtil extends BaseUtil {
-  getMovieImages(
-    showId: number | string,
-    callback: (response: Response | undefined) => void,
-  ) {
-    this.tmdb.tv
-      .getImages({
-        pathParameters: {
-          tv_id: showId,
-        },
-      })
-      .then((response: any) => {
-        const backdropPath = response.data.backdrops[0].file_path;
-        fetch(`https://image.tmdb.org/m/p/original${backdropPath}`)
-          .then((response: Response) => {
-            callback(response);
-          })
-          .catch((error: any) => {
-            console.log(error);
-            callback(undefined);
-          });
-      })
-      .catch((error: any) => {
-        console.log(error);
-        callback(undefined);
-      });
-  }
-
   async getMoviesBatch(
     daysAgo: number,
     period: number,
@@ -70,6 +44,7 @@ export class MoviesUtil extends BaseUtil {
 
     const startDate = dayjs().subtract(daysAgo, "day");
 
+    const tmdb = new TmdbAPI();
     const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
       const response = await this._request(
         "/calendars/my/movies",
@@ -82,6 +57,19 @@ export class MoviesUtil extends BaseUtil {
           extended: "full",
         },
       );
+
+      const imagePromises = response.map(
+        async (item: { show: { ids: any; images: any } }) => {
+          const show_ids = item.show.ids;
+          if (show_ids.tmdb) {
+            const images = await tmdb.tv.getImages(show_ids.tmdb);
+            item.show.images = images;
+          }
+        },
+      );
+
+      await Promise.all(imagePromises);
+
       return response;
     };
 
@@ -135,31 +123,22 @@ export class MoviesUtil extends BaseUtil {
 
     return Array.from(groupedOutput.values());
   }
-
   async getMoviesCalendar(days_ago = 30, period = 90) {
     let entries = await this.getMoviesBatch(days_ago, period);
 
-    // flatten mapped episodes to single array
     const flattenedEntries = [];
     for (const entry of entries) {
       flattenedEntries.push(...entry.items);
     }
 
-    const cal = ical({ name: "Trakt.tv Calendar" });
+    const cal = ical({ name: "Trakt.tv Movies Calendar" });
+
+    const promises: any[] = [];
     for (const entry of flattenedEntries) {
       if (entry.runtime === null || entry.runtime === 0) {
         entry.runtime = 120;
       }
       console.log(entry ? entry.ids : "no show");
-      const movie_ids = entry.ids;
-      let show_detail;
-      if (movie_ids.tmdb) {
-        show_detail = await this.tmdb.movie.getDetails({
-          pathParameters: {
-            movie_id: movie_ids.tmdb,
-          },
-        });
-      }
 
       const summary = `${entry.title}`;
 
@@ -173,6 +152,8 @@ export class MoviesUtil extends BaseUtil {
         location: entry.network,
       });
     }
+
+    await Promise.all(promises);
     return cal;
   }
 }

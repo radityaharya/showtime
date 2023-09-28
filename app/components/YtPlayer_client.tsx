@@ -44,7 +44,7 @@ export const YoutubePlayer: React.FC<Props> = ({ videoId, ...Props }) => {
   const onReady = (event: any) => {
     setTimeout(() => {
       setHidden(false);
-    }, 4000);
+    }, 6000);
   };
 
   const onEnd = (event: any) => {
@@ -52,16 +52,22 @@ export const YoutubePlayer: React.FC<Props> = ({ videoId, ...Props }) => {
   };
 
   return (
-    <div className="absolute top-0 left-0 max-w-screen max-h-screen w-full h-full overflow-hidden">
-      <div className={`absolute top-0 left-0 z-10 w-full h-full bg-black opacity-50 ${hidden ? "opacity-0" : "opacity-100"} transition-opacity duration-1000 ease-in-out`} />
+    <div className="absolute top-0 left-0 max-w-screen max-h-screen w-full h-full bg-black/20 overflow-hidden">
+      <div
+        className={`absolute top-0 left-0 w-full h-full opacity-50 ${
+          hidden ? "opacity-0" : "opacity-100"
+        } transition-opacity duration-1000 ease-in-out`}
+      />
       <YouTube
         videoId={videoId ?? "4IlF715Yn00"}
         opts={opts}
         onReady={onReady}
         onEnd={onEnd}
-        className={`absolute top-0 left-0 w-full h-full overflow-hidden transform ${
+        className={`absolute z-0 top-0 left-0 w-full h-full overflow-hidden transform ${
           hidden ? "opacity-0" : "opacity-100"
-        } transition-opacity duration-1000 ease-in-out ${hidden ? "scale-100" : "scale-110"} transition-transform duration-1000 ease-in-out ${Props.className}`}
+        } transition-opacity duration-1000 ease-in-out ${
+          hidden ? "scale-100" : "scale-110"
+        } transition-transform duration-1000 ease-in-out ${Props.className}`}
         style={{ pointerEvents: "none" }}
       />
     </div>

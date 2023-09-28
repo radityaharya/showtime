@@ -32,7 +32,7 @@ export class BaseUtil {
     const cache_key = `${method}:${url.toString()}`;
     const cached_data = await this.redis_client.get(cache_key);
     if (cached_data) {
-      console.log(`Returning cached data for: ${cache_key}`);
+      // console.log(`Returning cached data for: ${cache_key}`);
       return JSON.parse(cached_data);
     }
 

@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-interface PreviewItemType{
+interface PreviewItemType {
   itemLogo: string;
   itemBackdrop: string;
   airingAt: string;
@@ -9,28 +9,35 @@ interface PreviewItemType{
   episodeNumber: string;
   seriesName: string;
   seasonNumber: string;
-};
+}
 
-export const PreviewItem: React.FC<PreviewItemType> = ({ itemLogo, itemBackdrop, airingAt, network, episodeName, episodeNumber, seriesName, seasonNumber }) => {
-
+export const PreviewItem: React.FC<PreviewItemType> = ({
+  itemLogo,
+  itemBackdrop,
+  airingAt,
+  network,
+  episodeName,
+  episodeNumber,
+  seriesName,
+  seasonNumber,
+}) => {
   return (
     <div className="rounded-lg box-border w-[395px] h-[292px] overflow-hidden flex flex-col items-start justify-start text-left text-2xs text-floralwhite-100 font-text-sm-font-normal border-[2px] border-solid border-floralwhite-200">
       <div className="relative h-[138px] w-full">
-      <div className="absolute top-0 left-0 w-full h-full bg-[#000000]/50 z-[1]"></div>
-      <Image
+        <div className="absolute top-0 left-0 w-full h-full bg-[#000000]/50 z-[1]"></div>
+        <Image
           className="absolute object-cover z-[10] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
           alt=""
           src={itemLogo}
           height={40}
           width={100}
         />
-      <div
-        className="absolute h-full w-full flex flex-col items-center justify-center bg-cover bg-no-repeat bg-center top-0 left-0 z-0"
-        style={{ 
-          backgroundImage: `url("${itemBackdrop}")` ,
-        }}
-      >
-      </div>
+        <div
+          className="absolute h-full w-full flex flex-col items-center justify-center bg-cover bg-no-repeat bg-center top-0 left-0 z-0"
+          style={{
+            backgroundImage: `url("${itemBackdrop}")`,
+          }}
+        ></div>
       </div>
       <div className="self-stretch flex-1 flex flex-col items-center justify-center py-2.5 px-5">
         <div className="self-stretch flex flex-col items-start justify-end gap-[14px]">
@@ -47,7 +54,8 @@ export const PreviewItem: React.FC<PreviewItemType> = ({ itemLogo, itemBackdrop,
               {episodeName}
             </b>
             <div className="self-stretch relative text-sm leading-[20px]">
-              {seriesName} S{seasonNumber.toString().padStart(2, "0")}E{episodeNumber.toString().padStart(2, "0")}
+              {seriesName} S{seasonNumber.toString().padStart(2, "0")}E
+              {episodeNumber.toString().padStart(2, "0")}
             </div>
           </div>
         </div>

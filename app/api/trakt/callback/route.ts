@@ -31,9 +31,13 @@ export async function GET(
 
     const access_token = await response.json();
     const col = await Collection("users");
-    const user_access_token = access_token.access_token;
-    const trakt = new TraktAPI(user_access_token);
-    const user_slug = (await trakt.getUserInfo()).ids.slug;
+    const trakt = new TraktAPI();
+    console.log(access_token);
+    const user_slug = await trakt._request("users/me", "GET", undefined, {
+      Authorization: `Bearer ${access_token.access_token}`,
+    });
+
+    console.log(user_slug);
 
     const user = await col.findOne({ slug: user_slug });
     if (user) {

@@ -31,16 +31,17 @@ function hero() {
       <div
         className="absolute top-0 left-0 w-full h-full z-[5]"
         style={{
-          background:
-          `linear-gradient(to top, #000000 0%, transparent 100%)`, 
-          backgroundColor:"rgba(0,0,0,0.5)"
+          background: `linear-gradient(to top, #000000 0%, transparent 100%)`,
+          backgroundColor: "rgba(0,0,0,0.5)",
         }}
       />
       <YoutubePlayer videoId="4IlF715Yn00" />
       <div className="self-stretch h-full flex flex-col items-center justify-between z-10">
         <div className="self-stretch flex flex-row items-center justify-between">
           <div className="flex flex-col items-start justify-start gap-2">
-            <div className="relative font-medium text-gray-300">Currently Airing</div>
+            <div className="relative font-medium text-gray-300">
+              Currently Airing
+            </div>
             <div className="flex flex-col items-start justify-start gap-1 text-zinc-200">
               <h1 className="self-stretch relative text-4xl font-bold">
                 The Boys

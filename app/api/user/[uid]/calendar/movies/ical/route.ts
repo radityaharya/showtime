@@ -27,8 +27,7 @@ export async function GET(
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    const token = user.access_token.access_token;
-    const trakt = new TraktAPI(token);
+    const trakt = new TraktAPI(user.access_token);
     const cal = (await trakt.Shows.getShowsCalendar(days_ago, period)).toBlob();
     return new NextResponse(cal, {
       headers: {

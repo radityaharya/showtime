@@ -84,11 +84,11 @@ type AiredEpisode = {
 export class ShowsUtil extends BaseUtil {
   async getShowsBatch(
     daysAgo: number,
-    period: number
+    period: number,
   ): Promise<MappedEpisode[]> {
     if (daysAgo > MAX_DAYS_AGO || period > MAX_PERIOD) {
       throw new Error(
-        `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`
+        `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`,
       );
     }
 
@@ -104,7 +104,7 @@ export class ShowsUtil extends BaseUtil {
           start_date: startDate.format("YYYY-MM-DD"),
           days,
           // extended: "full",
-        }
+        },
       );
 
       let imagePromises: Promise<void>[] = [];
@@ -117,7 +117,7 @@ export class ShowsUtil extends BaseUtil {
               const images = await tmdb.tv.getImages(show_ids.tmdb);
               item.show.images = images;
             }
-          }
+          },
         );
       }
 
@@ -134,14 +134,14 @@ export class ShowsUtil extends BaseUtil {
       requests.push(
         getEpisodes(
           startDate.add(i * batchSize, "day"),
-          Math.min(batchSize, period - i * batchSize)
-        )
+          Math.min(batchSize, period - i * batchSize),
+        ),
       );
     }
 
-    const responses = await Promise.all(requests) as AiredEpisode[][];
+    const responses = (await Promise.all(requests)) as AiredEpisode[][];
     const entries = responses.flat();
-    
+
     const groupedOutput = new Map<string, MappedEpisode>();
     for (const item of entries) {
       try {
@@ -149,15 +149,15 @@ export class ShowsUtil extends BaseUtil {
         const dateStr = date.format("ddd, DD MMM YYYY");
         const dateUnix = date.unix();
         const key = dateStr;
-          
+
         const mappedEpisode = {
           show: item.show?.title || "",
           season: item.episode.season,
           number: item.episode.number,
           title: item.episode.title,
-          overview:  "",
-          network:  "",
-          runtime:  30,
+          overview: "",
+          network: "",
+          runtime: 30,
           background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
           logo: `https://image.tmdb.org/t/p/w500${item.show.images?.logos?.[0]?.file_path}`,
           airsAt: date.format(),
@@ -222,7 +222,7 @@ export class ShowsUtil extends BaseUtil {
               ? show_detail.networks[0].name
               : episode.network,
           });
-        })
+        }),
       );
     }
     await Promise.all(promises);

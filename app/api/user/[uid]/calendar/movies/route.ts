@@ -50,8 +50,7 @@ export async function GET(
     //   });
     // }
 
-    const token = user.access_token.access_token;
-    const trakt = new TraktAPI(token);
+    const trakt = new TraktAPI(user.access_token);
 
     const body = {
       data: await trakt.Movies.getMoviesBatch(days_ago, period),

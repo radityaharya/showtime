@@ -73,6 +73,7 @@ type Show = {
     logos: Image[];
     posters: Image[];
   };
+  details: any;
 };
 
 type AiredEpisode = {
@@ -107,21 +108,23 @@ export class ShowsUtil extends BaseUtil {
         },
       );
 
-      let imagePromises: Promise<void>[] = [];
+      let tmdbPromises: Promise<void>[] = [];
 
       if (Array.isArray(response)) {
-        imagePromises = response.map(
-          async (item: { show: { ids: any; images: any } }) => {
+        tmdbPromises = response.map(
+          async (item: { show: { ids: any; images: any, details: any} }) => {
             const show_ids = item.show.ids;
             if (show_ids.tmdb) {
               const images = await tmdb.tv.getImages(show_ids.tmdb);
               item.show.images = images;
+              const detail = await tmdb.tv.getDetails(show_ids.tmdb);
+              item.show.details= detail;
             }
           },
         );
       }
 
-      await Promise.all(imagePromises);
+      await Promise.all(tmdbPromises);
 
       return response;
     };
@@ -156,7 +159,7 @@ export class ShowsUtil extends BaseUtil {
           number: item.episode.number,
           title: item.episode.title,
           overview: "",
-          network: "",
+          network: item.show.details?.networks?.[0]?.name || "",
           runtime: 30,
           background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
           logo: `https://image.tmdb.org/t/p/w500${item.show.images?.logos?.[0]?.file_path}`,

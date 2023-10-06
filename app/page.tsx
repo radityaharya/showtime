@@ -8,7 +8,7 @@ import { Collection } from "@/lib/mongo/mongo";
 export default async function Home() {
   const users = await Collection("users");
   const user = await users.findOne({ slug: "otied" });
-  const accessToken = user?.access_token.access_token;
+  const accessToken = user?.access_token;
 
   const trakt = new TraktAPI(accessToken);
   const shows = (await trakt.Shows.getShowsBatch(5, 40)) as any;

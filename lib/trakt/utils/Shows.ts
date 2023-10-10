@@ -46,6 +46,8 @@ type Image = {
 type Episode = {
   season: number;
   number: number;
+  runtime: number;
+  overview: string;
   title: string;
   ids: {
     trakt: number;
@@ -104,7 +106,7 @@ export class ShowsUtil extends BaseUtil {
         {
           start_date: startDate.format("YYYY-MM-DD"),
           days,
-          // extended: "full",
+          extended: "full",
         },
       );
 
@@ -131,10 +133,10 @@ export class ShowsUtil extends BaseUtil {
 
     const batchSize = 20;
     const numBatches = Math.ceil(period / batchSize);
-    const requests = [];
+    const showsQueue = [];
 
     for (let i = 0; i < numBatches; i++) {
-      requests.push(
+      showsQueue.push(
         getEpisodes(
           startDate.add(i * batchSize, "day"),
           Math.min(batchSize, period - i * batchSize),
@@ -142,7 +144,7 @@ export class ShowsUtil extends BaseUtil {
       );
     }
 
-    const responses = (await Promise.all(requests)) as AiredEpisode[][];
+    const responses = (await Promise.all(showsQueue)) as AiredEpisode[][];
     const entries = responses.flat();
 
     const groupedOutput = new Map<string, MappedEpisode>();
@@ -158,7 +160,7 @@ export class ShowsUtil extends BaseUtil {
           season: item.episode.season,
           number: item.episode.number,
           title: item.episode.title,
-          overview: "",
+          overview:item.episode.overview || "", 
           network: item.show.details?.networks?.[0]?.name || "",
           runtime: 30,
           background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
@@ -190,7 +192,7 @@ export class ShowsUtil extends BaseUtil {
     let episodes = await this.getShowsBatch(days_ago, period);
 
     const flattenedEpisodes = [];
-    for (const episode of episodes) {
+    for (const episode of episodes) { 
       flattenedEpisodes.push(...episode.items);
     }
 

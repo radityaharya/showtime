@@ -11,13 +11,12 @@ interface MappedMovies {
   dateStr: string;
   dateUnix: number;
   items: {
-    show: string;
     title: string;
     overview: string;
     runtime: number;
-    // background: string | undefined;
-    // logo: string | undefined;
-    network: string;
+    background: string | undefined;
+    logo: string | undefined;
+    status: string;
     airsAt: string;
     airsAtUnix: number;
     ids: {
@@ -31,6 +30,16 @@ interface MappedMovies {
   }[];
 }
 
+type Image = {
+  aspect_ratio: number;
+  height: number;
+  iso_639_1: string | null;
+  file_path: string;
+  vote_average: number;
+  vote_count: number;
+  width: number;
+};
+
 export class MoviesUtil extends BaseUtil {
   async getMoviesBatch(
     daysAgo: number,
@@ -43,9 +52,8 @@ export class MoviesUtil extends BaseUtil {
     }
 
     const startDate = dayjs().subtract(daysAgo, "day");
-
     const tmdb = new TmdbAPI();
-    const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
+    const getMovies = async (startDate: dayjs.Dayjs, days: number) => {
       const response = await this._request(
         "/calendars/my/movies",
         "GET",
@@ -54,21 +62,27 @@ export class MoviesUtil extends BaseUtil {
         {
           start_date: startDate.format("YYYY-MM-DD"),
           days,
-          extended: "full",
+          // extended: "full",
         },
       );
 
-      const imagePromises = response.map(
-        async (item: { show: { ids: any; images: any } }) => {
-          const show_ids = item.show.ids;
-          if (show_ids.tmdb) {
-            const images = await tmdb.tv.getImages(show_ids.tmdb);
-            item.show.images = images;
-          }
-        },
-      );
+      let tmdbPromises: Promise<void>[] = [];
 
-      await Promise.all(imagePromises);
+      if (Array.isArray(response)) {
+        tmdbPromises = response.map(
+          async (item: { movie: { ids: any; images: any, details: any} }) => {
+            const movie_ids = item.movie.ids;
+            if (movie_ids.tmdb) {
+              const images = await tmdb.movie.getImages(movie_ids.tmdb);
+              item.movie.images = images;
+              const detail = await tmdb.movie.getDetails(movie_ids.tmdb);
+              item.movie.details= detail;
+            }
+          },
+        );
+      }
+
+      await Promise.all(tmdbPromises);
 
       return response;
     };
@@ -79,45 +93,49 @@ export class MoviesUtil extends BaseUtil {
 
     for (let i = 0; i < numBatches; i++) {
       requests.push(
-        getEpisodes(
+        getMovies(
           startDate.add(i * batchSize, "day"),
           Math.min(batchSize, period - i * batchSize),
         ),
       );
     }
 
-    const responses = await Promise.all(requests);
+    const responses = (await Promise.all(requests)) as any[][];
     const entries = responses.flat();
 
     const groupedOutput = new Map<string, MappedMovies>();
     for (const item of entries) {
-      const date = dayjs(item.first_aired).utc();
-      const dateStr = date.format("ddd, DD MMM YYYY");
-      const dateUnix = date.unix();
-      const key = dateStr;
+      try {
+        console.log(item)
+        const date = dayjs(item.released).utc();
+        const dateStr = date.format("ddd, DD MMM YYYY");
+        const dateUnix = date.unix();
+        const key = dateStr;
 
-      console.log(item);
-      const mappedMovie = {
-        show: item.movie.title,
-        title: item.movie.title,
-        overview: item.movie.overview,
-        runtime: item.movie.runtime || 30,
-        // background: item.movie.images?.fanart?.full,
-        // logo: item.show.images?.logo?.full,
-        network: item.movie.tagline,
-        airsAt: date.format(),
-        airsAtUnix: dateUnix,
-        ids: item.movie.ids,
-      };
+        const MappedMovies = {
+          title: item.movie.title,
+          overview: item.movie.details.overview,
+          status: item.movie.details?.status || "",
+          runtime: 30,
+          background: `https://image.tmdb.org/t/p/w500${item.movie.images?.backdrops?.[0]?.file_path}`,
+          logo: `https://image.tmdb.org/t/p/w500${item.movie.images?.logos?.[0]?.file_path}`,
+          airsAt: date.format(),
+          airsAtUnix: dateUnix,
+          ids: item.movie.ids,
+        };
 
-      if (groupedOutput.has(key)) {
-        groupedOutput.get(key)!.items.push(mappedMovie);
-      } else {
-        groupedOutput.set(key, {
-          dateStr,
-          dateUnix,
-          items: [mappedMovie],
-        });
+        if (groupedOutput.has(key)) {
+          groupedOutput.get(key)!.items.push(MappedMovies);
+        } else {
+          groupedOutput.set(key, {
+            dateStr,
+            dateUnix,
+            items: [MappedMovies],
+          });
+        }
+      } catch (error) {
+        console.error(error);
+        console.error(item);
       }
     }
 
@@ -138,7 +156,7 @@ export class MoviesUtil extends BaseUtil {
       if (entry.runtime === null || entry.runtime === 0) {
         entry.runtime = 120;
       }
-      console.log(entry ? entry.ids : "no show");
+      console.log(entry ? entry.ids : "no movie");
 
       const summary = `${entry.title}`;
 
@@ -149,7 +167,7 @@ export class MoviesUtil extends BaseUtil {
         start: new Date(entry.airsAtUnix * 1000),
         summary: summary,
         description: description,
-        location: entry.network,
+        location: entry.status,
       });
     }
 

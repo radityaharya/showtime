@@ -1,6 +1,6 @@
 import { Collection } from "@/lib/mongo/mongo";
 export const MAX_DAYS_AGO = 120;
-export const MAX_PERIOD = 90;
+export const MAX_PERIOD = 390;
 
 export interface AccessToken {
   slug: string;

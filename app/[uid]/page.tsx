@@ -5,24 +5,19 @@ import TraktAPI from "../../lib/trakt/Trakt";
 import ScheduleItems from "@/app/components/schedule/scheduleCard";
 import { ShowData } from "../types/schedule";
 import { Collection } from "@/lib/mongo/mongo";
-import { redirect } from "next/dist/server/api-utils";
+import { redirect } from 'next/navigation'
 import { NextApiResponse } from "next";
 import { notFound } from 'next/navigation'
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-export default async function UserPage({
-  params,
-  res,
-}: {
-  params: { uid: string };
-  res: NextApiResponse;
-}) {
-  const uid = params.uid;
 
-  if (!uid) {
-    return redirect(res, "/");
+type PageProps = {
+  params: {
+    uid: string
   }
+}
+export default async function UserPage({ params: { uid } }: PageProps) {
 
   const users = await Collection("users");
   const user = await users.findOne({ slug: uid });
@@ -30,6 +25,10 @@ export default async function UserPage({
   const session = await getServerSession(authOptions);
   
   console.log(session)
+
+  if (!session) {
+    return redirect("/api/auth/signin");
+  }
 
   if (!user) {
     return notFound();

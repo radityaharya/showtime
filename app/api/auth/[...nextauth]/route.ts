@@ -20,24 +20,16 @@ export const authOptions: NextAuthOptions = {
     TraktProvider({
       clientId: process.env.TRAKT_CLIENT_ID as string,
       clientSecret: process.env.TRAKT_CLIENT_SECRET as string,
-    }),
+    })
   ],
   secret: process.env.NEXTAUTH_SECRET as string,
-  callbacks: {
-    async jwt({token, account}) {
-      if (account) {
-        token = Object.assign({}, token, { access_token: account.access_token });
-      }
-      return token
-    },
-    async session({session, token}) {
-    if(session) {
-      session = Object.assign({}, session, {access_token: token.access_token})
-      console.log(session);
-      }
-    return session
-    }
-  }
+  // callbacks: {
+  //   async session({ session, token, user }) {
+  //     // Send properties to the client, like an access_token from a provider.
+  //     session.accessToken = token.accessToken
+  //     return session
+  //   }
+  // }
 };
 
 const handler = NextAuth(authOptions);

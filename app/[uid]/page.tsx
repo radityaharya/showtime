@@ -1,8 +1,8 @@
 import Image from "next/image";
-import { YoutubePlayer } from "../components/YtPlayer_client";
+import { YoutubePlayer } from "../../components/YtPlayer_client";
 import { Skeleton } from "@/components/ui/skeleton";
 import TraktAPI from "../../lib/trakt/Trakt";
-import ScheduleItems from "@/app/components/schedule/scheduleCard";
+import ScheduleItems from "@/components/schedule/scheduleCard";
 import { ShowData } from "../types/schedule";
 import { Collection } from "@/lib/mongo/mongo";
 import { redirect } from 'next/navigation'

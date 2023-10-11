@@ -1,8 +1,9 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, Session } from "next-auth";
 import TraktProvider from "next-auth/providers/trakt";
 import GoogleProvider from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "../../../../lib/mongo/mongoPromise";
+import { getServerSession } from "next-auth";
 
 const collection_prefix = process.env.MONGO_COLLECTION_PREFIX || "nextauth_";
 export const authOptions: NextAuthOptions = {
@@ -23,13 +24,20 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   secret: process.env.NEXTAUTH_SECRET as string,
-  // callbacks: {
-  //   async session({ session, token, user }) {
-  //     // Send properties to the client, like an access_token from a provider.
-  //     session.accessToken = token.accessToken
-  //     return session
-  //   }
-  // }
+  callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      return true
+    },
+    async redirect({ url, baseUrl }) {
+      return `${baseUrl}/auth/success`
+    },
+    async session({ session, user, token }) {
+      return session
+    },
+    async jwt({ token, user, account, profile, isNewUser }) {
+      return token
+    }
+  }
 };
 
 const handler = NextAuth(authOptions);

@@ -4,30 +4,30 @@ import { Skeleton } from "@/components/ui/skeleton";
 import TraktAPI from "../../lib/trakt/Trakt";
 import ScheduleItems from "@/components/schedule/scheduleCard";
 import { ShowData } from "../types/schedule";
+import { MovieData } from "../types/schedule";
 import { Collection } from "@/lib/mongo/mongo";
-import { redirect } from 'next/navigation'
+import { redirect } from "next/navigation";
 import { NextApiResponse } from "next";
-import { notFound } from 'next/navigation'
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-
+import { Suspense } from "react";
+import ScheduleView from "@/components/schedule/scheduleView";
 
 type PageProps = {
   params: {
-    uid: string
-  }
-}
+    uid: string;
+  };
+};
 export default async function UserPage({ params: { uid } }: PageProps) {
-
   const users = await Collection("users");
   const user = await users.findOne({ slug: uid });
-
   const session = await getServerSession(authOptions);
-  
-  console.log(session)
+
+  console.log(session);
 
   if (!session) {
-    return redirect("/api/auth/signin");
+    return redirect("/auth");
   }
 
   if (!user) {
@@ -38,14 +38,21 @@ export default async function UserPage({ params: { uid } }: PageProps) {
 
   const trakt = new TraktAPI(accessToken);
   const shows = (await trakt.Shows.getShowsBatch(5, 40)) as any;
+  const movies = (await trakt.Movies.getMoviesBatch(5, 40)) as any;
 
   return (
     <div>
       {hero()}
       <div className="relative pb-5 pt-16 px-2 md:px-20 bg-black w-full overflow-hidden flex flex-col text-left text-sm text-gray-100 font-text-2xl-font-semibold gap-10">
-        {shows.map((showData: ShowData) => (
-          <ScheduleItems key={showData.dateUnix} Shows={showData} />
-        ))}
+        <Suspense fallback={<p>Loading feed...</p>}>
+          {shows.map((showData: ShowData) => (
+            <ScheduleItems key={showData.dateUnix} Shows={showData} />
+          ))}
+          {/* <ScheduleView /> */}
+        </Suspense>
+        {/* {movies.map((movieData: MovieData) => (
+          <ScheduleItems key={movieData.dateUnix} Shows={movieData} />
+        ))} */}
       </div>
     </div>
   );
@@ -61,7 +68,7 @@ function hero() {
           backgroundColor: "rgba(0,0,0,0.5)",
         }}
       />
-      <YoutubePlayer videoId="4IlF715Yn00" />
+      {/* <YoutubePlayer videoId="4IlF715Yn00" /> */}
       <div className="self-stretch h-full flex flex-col items-center justify-between z-10">
         <div className="self-stretch flex flex-row items-center justify-between">
           <div className="flex flex-col items-start justify-start gap-2">

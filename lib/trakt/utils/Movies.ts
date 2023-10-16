@@ -7,7 +7,7 @@ import { TmdbAPI } from "@/lib/tmdb/Tmdb";
 
 dayjs.extend(utc);
 
-interface MappedMovies {
+export interface MappedMovies {
   dateStr: string;
   dateUnix: number;
   items: {
@@ -70,13 +70,13 @@ export class MoviesUtil extends BaseUtil {
 
       if (Array.isArray(response)) {
         tmdbPromises = response.map(
-          async (item: { movie: { ids: any; images: any, details: any} }) => {
+          async (item: { movie: { ids: any; images: any; details: any } }) => {
             const movie_ids = item.movie.ids;
             if (movie_ids.tmdb) {
               const images = await tmdb.movie.getImages(movie_ids.tmdb);
               item.movie.images = images;
               const detail = await tmdb.movie.getDetails(movie_ids.tmdb);
-              item.movie.details= detail;
+              item.movie.details = detail;
             }
           },
         );
@@ -106,7 +106,7 @@ export class MoviesUtil extends BaseUtil {
     const groupedOutput = new Map<string, MappedMovies>();
     for (const item of entries) {
       try {
-        console.log(item)
+        console.log(item);
         const date = dayjs(item.released).utc();
         const dateStr = date.format("ddd, DD MMM YYYY");
         const dateUnix = date.unix();

@@ -4,21 +4,21 @@ interface PreviewItemType {
   itemLogo: string;
   itemBackdrop: string;
   airingAt: string;
-  network: string;
-  episodeName: string;
-  episodeNumber: string;
-  seriesName: string;
-  seasonNumber: string;
+  pillInfo: string;
+  title: string;
+  episodeNumber?: string;
+  subtitle?: string;
+  seasonNumber?: string;
 }
 
 export const PreviewItem: React.FC<PreviewItemType> = ({
   itemLogo,
   itemBackdrop,
   airingAt,
-  network,
-  episodeName,
+  pillInfo,
+  title,
   episodeNumber,
-  seriesName,
+  subtitle,
   seasonNumber,
 }) => {
   return (
@@ -46,16 +46,14 @@ export const PreviewItem: React.FC<PreviewItemType> = ({
               <div className="relative font-semibold">{airingAt}</div>
             </div>
             <div className="rounded-sm bg-zinc-800 flex flex-row items-start justify-start py-[3px] px-1">
-              <div className="relative font-semibold">{network}</div>
+              <div className="relative font-semibold">{pillInfo}</div>
             </div>
           </div>
           <div className="self-stretch flex flex-col items-start justify-end gap-[5px] text-base">
-            <b className="self-stretch relative leading-[24px]">
-              {episodeName}
-            </b>
+            <b className="self-stretch relative leading-[24px]">{title}</b>
             <div className="self-stretch relative text-sm leading-[20px]">
-              {seriesName} S{seasonNumber.toString().padStart(2, "0")}E
-              {episodeNumber.toString().padStart(2, "0")}
+              {subtitle} S{seasonNumber?.toString().padStart(2, "0")}E
+              {seasonNumber?.toString().padStart(2, "0")}
             </div>
           </div>
         </div>

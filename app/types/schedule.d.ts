@@ -1,7 +1,7 @@
 interface MovieItem {
   overview: string;
   released: string;
-  released_unix: number;
+  releasedUnix: number;
   runtime: number;
   title: string;
   background?: string;
@@ -9,14 +9,14 @@ interface MovieItem {
   show?: string;
   season?: number;
   number?: number;
-  airs_at_unix?: number;
+  airsAtUnix?: number;
   network?: string;
 }
 
 interface MovieData {
   type: "movies";
-  date_str: string;
-  date_unix: number;
+  dateStr: string;
+  dateUnix: number;
   items: MovieItem[];
 }
 

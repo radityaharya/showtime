@@ -1,4 +1,5 @@
 import { Collection } from "@/lib/mongo/mongo";
+const Redis = require("ioredis");
 export const MAX_DAYS_AGO = 120;
 export const MAX_PERIOD = 390;
 
@@ -18,6 +19,7 @@ export class BaseUtil {
   private client_secret: string;
   private redirect_uri: string;
   private accessToken?: AccessToken;
+  public redis_client: typeof Redis;
   private user_slug?: string;
   private api_url: string;
 
@@ -28,6 +30,9 @@ export class BaseUtil {
     this.user_slug = user_slug;
     this.accessToken = accessToken;
     this.api_url = "https://api.trakt.tv";
+    this.redis_client = new Redis(process.env.REDIS_URL, {
+      keepAlive: 5000,
+    });
   }
   async _request(
     path: string,

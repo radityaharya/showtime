@@ -7,7 +7,7 @@ import { TmdbAPI } from "@/lib/tmdb/Tmdb";
 
 dayjs.extend(utc);
 
-interface MappedEpisode {
+export interface MappedEpisode {
   dateStr: string;
   dateUnix: number;
   items: {
@@ -94,9 +94,20 @@ export class ShowsUtil extends BaseUtil {
         `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`,
       );
     }
-
     const startDate = dayjs().subtract(daysAgo, "day");
     const tmdb = new TmdbAPI();
+
+    const userSlug = await this._request("/users/me", "GET");
+    const cacheKey = `shows_${userSlug.ids.slug}_${dayjs().format(
+      "YYYY-MM-DD-H",
+    )}_${daysAgo}_${period}`;
+    const cached_data = await this.redis_client.get(cacheKey);
+
+    if (cached_data) {
+      console.log("returned cached show for", cacheKey);
+      return JSON.parse(cached_data);
+    }
+
     const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
       const response = await this._request(
         "/calendars/my/shows",
@@ -114,13 +125,13 @@ export class ShowsUtil extends BaseUtil {
 
       if (Array.isArray(response)) {
         tmdbPromises = response.map(
-          async (item: { show: { ids: any; images: any, details: any} }) => {
+          async (item: { show: { ids: any; images: any; details: any } }) => {
             const show_ids = item.show.ids;
             if (show_ids.tmdb) {
               const images = await tmdb.tv.getImages(show_ids.tmdb);
               item.show.images = images;
               const detail = await tmdb.tv.getDetails(show_ids.tmdb);
-              item.show.details= detail;
+              item.show.details = detail;
             }
           },
         );
@@ -160,7 +171,7 @@ export class ShowsUtil extends BaseUtil {
           season: item.episode.season,
           number: item.episode.number,
           title: item.episode.title,
-          overview:item.episode.overview || "", 
+          overview: item.episode.overview || "",
           network: item.show.details?.networks?.[0]?.name || "",
           runtime: 30,
           background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
@@ -185,14 +196,16 @@ export class ShowsUtil extends BaseUtil {
       }
     }
 
-    return Array.from(groupedOutput.values());
+    const data = Array.from(groupedOutput.values());
+    await this.redis_client.set(cacheKey, JSON.stringify(data), "EX", 60);
+    return data;
   }
 
   async getShowsCalendar(days_ago = 30, period = 90) {
     let episodes = await this.getShowsBatch(days_ago, period);
 
     const flattenedEpisodes = [];
-    for (const episode of episodes) { 
+    for (const episode of episodes) {
       flattenedEpisodes.push(...episode.items);
     }
 

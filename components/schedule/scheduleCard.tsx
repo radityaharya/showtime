@@ -1,8 +1,8 @@
 import PreviewItem from "./previewItem";
-import { ShowData } from "@/app/types/schedule";
+import { MovieData, ShowData } from "@/app/types/schedule";
 
 interface Props {
-  Shows: ShowData;
+  Shows: ShowData | MovieData;
 }
 
 const ScheduleItems: React.FC<Props> = ({ Shows }) => {
@@ -34,18 +34,18 @@ const ScheduleItems: React.FC<Props> = ({ Shows }) => {
                   ? show.background
                   : "https://placehold.co/409x292"
               }
-              airingAt={new Date(show.airsAtUnix * 1000)
+              airingAt={new Date((show.airsAtUnix || 0) * 1000)
                 .toLocaleTimeString("en-US", {
                   hour: "numeric",
                   minute: "numeric",
                 })
                 .replace(" ", "")
                 .toLowerCase()}
-              network={show.network ? show.network : "N/A"}
-              episodeName={show.title}
-              episodeNumber={show.number.toString()}
-              seriesName={show.show}
-              seasonNumber={show.season.toString()}
+              pillInfo={show.network ? show.network : "N/A"}
+              title={show.title}
+              episodeNumber={show?.number?.toString() || "N/A"}
+              subtitle={show.show || "N/A"}
+              seasonNumber={show?.season?.toString() || "N/A"}
             />
           ))}
         </div>

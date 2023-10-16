@@ -2,18 +2,17 @@
 
 import Image from "next/image";
 import Page from "../../layouts/Page";
-import { getProviders, signIn, useSession } from "next-auth/react"
-import { getServerSession } from "next-auth/next"
+import { getProviders, signIn, useSession } from "next-auth/react";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { useRouter } from "next/navigation";
 export default function Login() {
-
-  const router = useRouter()
-  const {data: session} = useSession()
-  const name = session?.user?.name
+  const router = useRouter();
+  const { data: session } = useSession();
+  const name = session?.user?.name;
 
   if (name) {
-      router.push(`${name}`)
+    router.push(`${name}`);
   }
 
   return (

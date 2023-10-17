@@ -26,9 +26,9 @@ export default async function UserPage({ params: { uid } }: PageProps) {
 
   console.log(session);
 
-  if (!session) {
-    return redirect("/auth");
-  }
+  // if (!session) {
+  //   return redirect("/auth");
+  // }
 
   if (!user) {
     return notFound();
@@ -38,17 +38,17 @@ export default async function UserPage({ params: { uid } }: PageProps) {
 
   const trakt = new TraktAPI(accessToken);
   const shows = (await trakt.Shows.getShowsBatch(5, 40)) as any;
-  const movies = (await trakt.Movies.getMoviesBatch(5, 40)) as any;
+  // const movies = (await trakt.Movies.getMoviesBatch(5, 40)) as any;
 
   return (
     <div>
       {hero()}
       <div className="relative pb-5 pt-16 px-2 md:px-20 bg-black w-full overflow-hidden flex flex-col text-left text-sm text-gray-100 font-text-2xl-font-semibold gap-10">
         <Suspense fallback={<p>Loading feed...</p>}>
-          {shows.map((showData: ShowData) => (
+          {/* {shows.map((showData: ShowData) => (
             <ScheduleItems key={showData.dateUnix} Shows={showData} />
-          ))}
-          {/* <ScheduleView /> */}
+          ))} */}
+          <ScheduleView initItems={shows} />
         </Suspense>
         {/* {movies.map((movieData: MovieData) => (
           <ScheduleItems key={movieData.dateUnix} Shows={movieData} />

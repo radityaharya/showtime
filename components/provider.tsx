@@ -2,12 +2,17 @@
 import { SessionProvider } from "next-auth/react";
 import { createContext, useContext, useState } from "react";
 import { ShowData, MovieData } from "../app/types/schedule";
+import dayjs from "dayjs";
 
 export type contextType = {
   state: {
     calendar: {
       type: "shows" | "movies";
       // data: ShowData[] | MovieData[] | null
+      dateRange: {
+        from: Date;
+        to: Date;
+      };
     };
     user: {
       uid: string | null;
@@ -20,6 +25,10 @@ export type contextType = {
       calendar: {
         type: "shows" | "movies";
         // data: ShowData[] | MovieData[] | null;
+        dateRange: {
+          from: Date;
+          to: Date;
+        };
       };
       user: {
         uid: string | null;
@@ -35,6 +44,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     calendar: {
       type: "shows" as "shows" | "movies",
       // data: null as ShowData[] | MovieData[] | null
+      dateRange: {
+        from: dayjs().subtract(2, "day").toDate(),
+        to: dayjs().add(90, "day").toDate(),
+      },
     },
     user: {
       uid: null as string | null,

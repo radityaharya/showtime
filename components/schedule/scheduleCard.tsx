@@ -34,13 +34,7 @@ const ScheduleItems: React.FC<Props> = ({ Shows }) => {
                   ? show.background
                   : "https://placehold.co/409x292"
               }
-              airingAt={new Date((show.airsAtUnix || 0) * 1000)
-                .toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "numeric",
-                })
-                .replace(" ", "")
-                .toLowerCase()}
+              airingAt={show.airsAtUnix as number}
               pillInfo={show.network ? show.network : "N/A"}
               title={show.title}
               episodeNumber={show?.number?.toString() || "N/A"}

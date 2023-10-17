@@ -17,14 +17,26 @@ export async function GET(
   try {
     const days_ago = request.url.includes("days_ago")
       ? parseInt(request.url.split("days_ago=")[1].split("&")[0])
-      : 1;
+      : undefined;
     const period = request.url.includes("period")
       ? parseInt(request.url.split("period=")[1].split("&")[0])
-      : 5;
+      : undefined;
+    const dateStart = request.url.includes("dateStart")
+      ? request.url.split("dateStart=")[1].split("&")[0]
+      : undefined;
+    const dateEnd = request.url.includes("dateEnd")
+      ? request.url.split("dateEnd=")[1].split("&")[0]
+      : undefined;
 
-    console.log(`days_ago: ${days_ago} | period: ${period}`);
-    if (![days_ago, period].every(Number.isInteger)) {
-      throw new Error("days_ago and period must be integers");
+    if (
+      !(
+        (days_ago !== undefined && period !== undefined) ||
+        (dateStart !== undefined && dateEnd !== undefined)
+      )
+    ) {
+      throw new Error(
+        "Either days_ago and period or dateStart() and dateEnd must be present",
+      );
     }
 
     const col = await Collection("users");
@@ -53,7 +65,12 @@ export async function GET(
     const trakt = new TraktAPI(user.access_token);
 
     const body = {
-      data: await trakt.Shows.getShowsBatch(days_ago, period),
+      data: await trakt.Shows.getShowsBatch(
+        days_ago,
+        period,
+        dateStart,
+        dateEnd,
+      ),
       type: "shows",
       status: "success",
     };

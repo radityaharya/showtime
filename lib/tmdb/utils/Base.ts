@@ -27,7 +27,7 @@ export class BaseUtil {
       const searchParams = new URLSearchParams(query);
       url.search = searchParams.toString();
     }
-    console.log(url.toString());
+    // console.log(url.toString());
 
     const cache_key = `${method}:${url.toString()}`;
     const cached_data = await this.redis_client.get(cache_key);

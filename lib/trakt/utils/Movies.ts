@@ -42,16 +42,29 @@ type Image = {
 
 export class MoviesUtil extends BaseUtil {
   async getMoviesBatch(
-    daysAgo: number,
-    period: number,
+    daysAgo?: number,
+    period?: number,
+    dateStart?: string,
+    dateEnd?: string,
   ): Promise<MappedMovies[]> {
-    if (daysAgo > MAX_DAYS_AGO || period > MAX_PERIOD) {
+    // date format: YYYY-MM-DD
+    let startDate;
+    if (daysAgo && period) {
+      if (daysAgo > MAX_DAYS_AGO || period > MAX_PERIOD) {
+        throw new Error(
+          `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`,
+        );
+      }
+      startDate = dayjs().subtract(daysAgo, "day");
+    } else if (dateStart && dateEnd) {
+      startDate = dayjs(dateStart);
+      period = dayjs(dateEnd).diff(startDate, "day");
+    } else {
       throw new Error(
-        `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`,
+        "Either daysAgo and period or dateStart and dateEnd must be provided",
       );
     }
 
-    const startDate = dayjs().subtract(daysAgo, "day");
     const tmdb = new TmdbAPI();
     const getMovies = async (startDate: dayjs.Dayjs, days: number) => {
       const response = await this._request(
@@ -106,7 +119,6 @@ export class MoviesUtil extends BaseUtil {
     const groupedOutput = new Map<string, MappedMovies>();
     for (const item of entries) {
       try {
-        console.log(item);
         const date = dayjs(item.released).utc();
         const dateStr = date.format("ddd, DD MMM YYYY");
         const dateUnix = date.unix();

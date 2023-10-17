@@ -86,15 +86,33 @@ type AiredEpisode = {
 
 export class ShowsUtil extends BaseUtil {
   async getShowsBatch(
-    daysAgo: number,
-    period: number,
+    daysAgo?: number,
+    period?: number,
+    dateStart?: string,
+    dateEnd?: string,
   ): Promise<MappedEpisode[]> {
-    if (daysAgo > MAX_DAYS_AGO || period > MAX_PERIOD) {
+    // date format: YYYY-MM-DD
+    let startDate;
+    if (daysAgo && period) {
+      if (daysAgo > MAX_DAYS_AGO || period > MAX_PERIOD) {
+        throw new Error(
+          `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`,
+        );
+      }
+      startDate = dayjs().subtract(daysAgo, "day");
+    } else if (dateStart && dateEnd) {
+      startDate = dayjs(dateStart);
+      period = dayjs(dateEnd).diff(startDate, "day");
+    } else if (period && daysAgo && dateStart && dateEnd) {
       throw new Error(
-        `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`,
+        "Either one of daysAgo and period or dateStart and dateEnd must be provided",
+      );
+    } else {
+      throw new Error(
+        "Either one of daysAgo and period or dateStart and dateEnd must be provided",
       );
     }
-    const startDate = dayjs().subtract(daysAgo, "day");
+
     const tmdb = new TmdbAPI();
 
     const userSlug = await this._request("/users/me", "GET");

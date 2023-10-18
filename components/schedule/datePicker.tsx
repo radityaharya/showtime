@@ -53,7 +53,7 @@ export function RangeDatePicker({
           <Button
             variant={"outline"}
             className={cn(
-              "w-[280px] justify-start text-left font-normal",
+              "w-[150px] md:w-[280px]  justify-start text-left font-normal",
               !dateRange && "text-muted-foreground",
             )}
           >
@@ -98,7 +98,7 @@ export function RangeDatePicker({
           <Button
             variant={"outline"}
             className={cn(
-              "w-[280px] justify-start text-left font-normal",
+              "w-[150px] md:w-[280px]  justify-start text-left font-normal",
               !dateRange && "text-muted-foreground",
             )}
           >

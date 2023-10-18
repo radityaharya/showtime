@@ -10,7 +10,7 @@ import { TypeSwitcher } from "./typeSwitcher";
 import { AddToCalendar } from "./addToCalendar";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-
+import { Oval } from "react-loader-spinner";
 dayjs.extend(utc);
 
 interface Props {
@@ -33,18 +33,14 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
 
   const [isDataLoading, setIsDataLoading] = useState(true);
 
-  // format: YYYY-MM-DD
-  // const [dateStart, setDateStart] = useState(dayjs().subtract(2, "day").format("YYYY-MM-DD"));
-  // const [dateEnd, setDateEnd] = useState(dayjs().add(90, "day").format("YYYY-MM-DD"));
-
   const debouncedFetch = useRef(
     debounce((url: string) => {
       setIsDataLoading(true);
 
-      // Check if data is stored in local storage
       const cachedData = localStorage.getItem(url);
-      if (cachedData) {
-        setItems(JSON.parse(cachedData));
+      if (cachedData && Date.now() - JSON.parse(cachedData).date < 36000000) {
+        const data = JSON.parse(cachedData);
+        setItems(data.data as Items);
         setIsDataLoading(false);
         return;
       }
@@ -58,26 +54,23 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
           setIsDataLoading(false);
 
           // Store data in local storage
-          localStorage.setItem(url, JSON.stringify(data.data));
+          localStorage.setItem(
+            url,
+            JSON.stringify({ data: data.data, date: Date.now() })
+          );
         });
-    }, 500),
+    }, 500)
   ).current;
 
   useEffect(() => {
     debouncedFetch(
       `/api/user/${uid}/calendar/${state.calendar.type}?dateStart=${dayjs(
-        state.calendar.dateRange.from,
+        state.calendar.dateRange.from
       ).format("YYYY-MM-DD")}&dateEnd=${dayjs(
-        state.calendar.dateRange.to,
-      ).format("YYYY-MM-DD")}`,
+        state.calendar.dateRange.to
+      ).format("YYYY-MM-DD")}`
     );
-  }, [
-    debouncedFetch,
-    state.calendar.type,
-    uid,
-    state.calendar.dateRange.from,
-    state.calendar.dateRange.to,
-  ]);
+  }, [debouncedFetch, state.calendar.type, uid, state.calendar.dateRange]);
 
   function handleTypeToggle() {
     const newType = state.calendar.type === "shows" ? "movies" : "shows";
@@ -104,15 +97,32 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
   }
 
   return (
-    <div className="">
-      <h2 className="text-4xl mb-8 font-semibold ">Schedule</h2>
-      <div className="flex flex-row gap-2 mb-8">
+    <div className="px-4 md:px-0">
+      <div className="flex flex-row items-center gap-3 mb-8">
+        <h2 className="text-4xl font-semibold ">Schedule</h2>
         <TypeSwitcher />
+        {isDataLoading ? (
+          <Oval
+            height={20}
+            width={20}
+            color="#ffffff"
+            wrapperStyle={{}}
+            wrapperClass=""
+            visible={true}
+            ariaLabel="oval-loading"
+            secondaryColor="#f0f0f0"
+            strokeWidth={5}
+            strokeWidthSecondary={5}
+          />
+        ) : (
+          ""
+        )}
+      </div>
+      <div className="flex flex-row gap-2 mb-8 flex-wrap">
         <RangeDatePicker />
         <AddToCalendar />
-        {isDataLoading ? "Loading..." : ""}
       </div>
-      <main>
+      <main className="flex flex-col gap-4">
         {Items.length > 0 ? (
           Items.map((item) => (
             <ScheduleItems key={item.dateUnix} Shows={item} />

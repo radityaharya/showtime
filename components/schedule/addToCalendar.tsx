@@ -8,21 +8,11 @@ import {
   DropdownMenu,
   DropdownMenuItem,
   DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
-interface Props {
-  // Define component props here
-}
-
-export const AddToCalendar: React.FC<Props> = (
-  {
-    /* Destructure props here */
-  },
-) => {
+export const AddToCalendar: React.FC = () => {
   const { state, setState } = useContext(AppContext) as contextType;
 
   const [host, setHost] = useState("");
@@ -37,33 +27,16 @@ export const AddToCalendar: React.FC<Props> = (
   ) {
     const calendarType = state.calendar.type;
     const webcal_url = `${host}/api/${user}/calendar/${calendarType}/ical`
-      .replace("https://", "webcal://")
-      .replace("http://", "webcal://");
+      .replace(/^https?:/, "webcal:");
 
-    let addCalendarUrl = "";
+    const urls = {
+      webcal: webcal_url,
+      google: `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal_url)}`,
+      outlook365: `https://outlook.office.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription&url=${encodeURIComponent(webcal_url)}&name=Trakt%20iCal`,
+      outlooklive: `https://outlook.live.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription&url=${encodeURIComponent(webcal_url)}&name=Trakt%20iCal`,
+    };
 
-    switch (protocol) {
-      case "webcal":
-        addCalendarUrl = webcal_url;
-        break;
-      case "google":
-        addCalendarUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(
-          webcal_url,
-        )}`;
-        break;
-      case "outlook365":
-        addCalendarUrl = `https://outlook.office.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription&url=${encodeURIComponent(
-          webcal_url,
-        )}&name=Trakt%20iCal`;
-        break;
-      case "outlooklive":
-        addCalendarUrl = `https://outlook.live.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription&url=${encodeURIComponent(
-          webcal_url,
-        )}&name=Trakt%20iCal`;
-        break;
-    }
-
-    return addCalendarUrl;
+    return urls[protocol];
   }
 
   return (

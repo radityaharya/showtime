@@ -35,7 +35,7 @@ export default async function UserPage({ params: { uid } }: PageProps) {
   const accessToken = user?.access_token;
 
   const trakt = new TraktAPI(accessToken);
-  const shows = (await trakt.Shows.getShowsBatch(2, 90)) as any;
+  const shows = (await trakt.Shows.getShowsBatch(2, 10)) as any;
 
   return (
     <div>
@@ -51,7 +51,7 @@ export default async function UserPage({ params: { uid } }: PageProps) {
 
 function hero() {
   return (
-    <div className="relative pb-10 pt-16 px-2 md:px-20 bg-black w-full h-screen min-h-screen overflow-hidden flex flex-col text-left text-sm text-gray-100 font-text-2xl-font-semibold">
+    <div className="relative pb-10 pt-8 md:pt-16 px-4 md:px-20 bg-black w-full h-[100svh] min-h-[100svh] overflow-hidden flex flex-col text-left text-sm text-gray-100 font-text-2xl-font-semibold">
       <div
         className="absolute top-0 left-0 w-full h-full z-[5]"
         style={{
@@ -59,7 +59,7 @@ function hero() {
           backgroundColor: "rgba(0,0,0,0.5)",
         }}
       />
-      {/* <YoutubePlayer videoId="4IlF715Yn00" /> */}
+      <YoutubePlayer videoId="4IlF715Yn00" />
       <div className="self-stretch h-full flex flex-col items-center justify-between z-10">
         <div className="self-stretch flex flex-row items-center justify-between">
           <div className="flex flex-col items-start justify-start gap-2">

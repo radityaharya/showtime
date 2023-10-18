@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { ArrowRight, Calendar as CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -47,8 +47,8 @@ export function RangeDatePicker({
   }, [dateRange, setState]);
 
   return (
-    <div className="flex flex-col space-y-2">
-      <Popover>
+    <div className="flex flex-row gap-2 align-middle">
+      <Popover data-side="bottom">
         <PopoverTrigger asChild>
           <Button
             variant={"outline"}
@@ -87,11 +87,13 @@ export function RangeDatePicker({
               onSelect={(date) =>
                 setDateRange((prev) => ({ ...prev, from: date }))
               }
+              defaultMonth={dateRange?.from}
             />
           </div>
         </PopoverContent>
       </Popover>
-      <Popover>
+      <ArrowRight className="h-full my-auto w-4" />
+      <Popover data-side="bottom">
         <PopoverTrigger asChild>
           <Button
             variant={"outline"}
@@ -135,6 +137,7 @@ export function RangeDatePicker({
                   (prev) => ({ ...prev, to: date }) as DateRange | undefined,
                 )
               }
+              defaultMonth={dateRange?.to}
             />
           </div>
         </PopoverContent>

@@ -2,12 +2,10 @@ import Image from "next/image";
 import { YoutubePlayer } from "../../components/YtPlayer_client";
 import { Skeleton } from "@/components/ui/skeleton";
 import TraktAPI from "../../lib/trakt/Trakt";
-import ScheduleItems from "@/components/schedule/scheduleCard";
 import { ShowData } from "../types/schedule";
 import { MovieData } from "../types/schedule";
 import { Collection } from "@/lib/mongo/mongo";
 import { redirect } from "next/navigation";
-import { NextApiResponse } from "next";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -37,22 +35,15 @@ export default async function UserPage({ params: { uid } }: PageProps) {
   const accessToken = user?.access_token;
 
   const trakt = new TraktAPI(accessToken);
-  const shows = (await trakt.Shows.getShowsBatch(5, 40)) as any;
-  // const movies = (await trakt.Movies.getMoviesBatch(5, 40)) as any;
+  const shows = (await trakt.Shows.getShowsBatch(2, 90)) as any;
 
   return (
     <div>
       {hero()}
       <div className="relative pb-5 pt-16 px-2 md:px-20 bg-black w-full overflow-hidden flex flex-col text-left text-sm text-gray-100 font-text-2xl-font-semibold gap-10">
         <Suspense fallback={<p>Loading feed...</p>}>
-          {/* {shows.map((showData: ShowData) => (
-            <ScheduleItems key={showData.dateUnix} Shows={showData} />
-          ))} */}
           <ScheduleView initItems={shows} />
         </Suspense>
-        {/* {movies.map((movieData: MovieData) => (
-          <ScheduleItems key={movieData.dateUnix} Shows={movieData} />
-        ))} */}
       </div>
     </div>
   );

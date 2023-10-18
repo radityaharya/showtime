@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef, useContext } from "react";
 import { AppContext, type contextType } from "../provider";
 import { RangeDatePicker } from "./datePicker";
-import LazyLoad from "react-lazy-load";
+import { TypeSwitcher } from "./typeSwitcher";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
@@ -59,16 +59,16 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
           // Store data in local storage
           localStorage.setItem(url, JSON.stringify(data.data));
         });
-    }, 500),
+    }, 500)
   ).current;
 
   useEffect(() => {
     debouncedFetch(
       `/api/user/${uid}/calendar/${state.calendar.type}?dateStart=${dayjs(
-        state.calendar.dateRange.from,
+        state.calendar.dateRange.from
       ).format("YYYY-MM-DD")}&dateEnd=${dayjs(
-        state.calendar.dateRange.to,
-      ).format("YYYY-MM-DD")}`,
+        state.calendar.dateRange.to
+      ).format("YYYY-MM-DD")}`
     );
   }, [
     debouncedFetch,
@@ -90,23 +90,42 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
     }));
   }
 
+  function handleTypeChange(el: HTMLElement) {
+    const newType = el.getAttribute("data-type") as "shows" | "movies";
+    setItems([]);
+    setState((prevState) => ({
+      ...prevState,
+      calendar: {
+        ...prevState.calendar,
+        type: newType,
+      },
+    }));
+  }
+
   return (
-    <div>
-      <div className="pb-4 text-white">
-        <button onClick={handleTypeToggle} className="px-4 py-2">
-          toggle type
-        </button>
+    <div className="">
+      <h2 className="text-4xl mb-8 font-semibold ">
+        Schedule
+      </h2>
+      <div className="flex flex-row gap-2 mb-8">
+        <TypeSwitcher />
+        <RangeDatePicker />
+        {/* show "loading" when loading*/}
+        {isDataLoading ? (
+          "Loading..."
+        ) : (
+          ""
+        )}
       </div>
-      <RangeDatePicker />
-      {Items.length > 0 ? (
-        Items.map((item) => (
-          <LazyLoad key={item.dateUnix} height={432} offset={300}>
+      <main>
+        {Items.length > 0 ? (
+          Items.map((item) => (
             <ScheduleItems key={item.dateUnix} Shows={item} />
-          </LazyLoad>
-        ))
-      ) : (
-        <p className="text-white">Loading...</p>
-      )}
+          ))
+        ) : (
+          <p className="text-white">Loading...</p>
+        )}
+      </main>
     </div>
   );
 };

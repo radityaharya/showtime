@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useContext } from "react";
 import { AppContext, type contextType } from "../provider";
 import { RangeDatePicker } from "./datePicker";
 import { TypeSwitcher } from "./typeSwitcher";
+import { AddToCalendar } from "./addToCalendar";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
@@ -59,16 +60,16 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
           // Store data in local storage
           localStorage.setItem(url, JSON.stringify(data.data));
         });
-    }, 500)
+    }, 500),
   ).current;
 
   useEffect(() => {
     debouncedFetch(
       `/api/user/${uid}/calendar/${state.calendar.type}?dateStart=${dayjs(
-        state.calendar.dateRange.from
+        state.calendar.dateRange.from,
       ).format("YYYY-MM-DD")}&dateEnd=${dayjs(
-        state.calendar.dateRange.to
-      ).format("YYYY-MM-DD")}`
+        state.calendar.dateRange.to,
+      ).format("YYYY-MM-DD")}`,
     );
   }, [
     debouncedFetch,
@@ -104,18 +105,12 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
 
   return (
     <div className="">
-      <h2 className="text-4xl mb-8 font-semibold ">
-        Schedule
-      </h2>
+      <h2 className="text-4xl mb-8 font-semibold ">Schedule</h2>
       <div className="flex flex-row gap-2 mb-8">
         <TypeSwitcher />
         <RangeDatePicker />
-        {/* show "loading" when loading*/}
-        {isDataLoading ? (
-          "Loading..."
-        ) : (
-          ""
-        )}
+        <AddToCalendar />
+        {isDataLoading ? "Loading..." : ""}
       </div>
       <main>
         {Items.length > 0 ? (

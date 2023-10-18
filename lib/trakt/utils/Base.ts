@@ -1,6 +1,6 @@
 import { Collection } from "@/lib/mongo/mongo";
 const Redis = require("ioredis");
-export const MAX_DAYS_AGO = 120;
+export const MAX_DAYS_AGO = 360;
 export const MAX_PERIOD = 390;
 
 export interface AccessToken {

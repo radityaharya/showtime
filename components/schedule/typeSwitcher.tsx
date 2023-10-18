@@ -1,6 +1,5 @@
 "use client";
 
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,7 +19,12 @@ export function TypeSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">{state.calendar.type.charAt(0).toUpperCase() + state.calendar.type.slice(1) as "shows" | "movies"}</Button>
+        <Button variant="outline">
+          {
+            (state.calendar.type.charAt(0).toUpperCase() +
+              state.calendar.type.slice(1)) as "shows" | "movies"
+          }
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
         <DropdownMenuLabel>Type</DropdownMenuLabel>

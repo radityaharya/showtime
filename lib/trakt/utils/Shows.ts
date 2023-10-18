@@ -4,6 +4,7 @@ import ical from "ical-generator";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { TmdbAPI } from "@/lib/tmdb/Tmdb";
+import { Collection } from "@/lib/mongo/mongo";
 
 dayjs.extend(utc);
 
@@ -156,7 +157,6 @@ export class ShowsUtil extends BaseUtil {
       }
 
       await Promise.all(tmdbPromises);
-
       return response;
     };
 
@@ -215,6 +215,36 @@ export class ShowsUtil extends BaseUtil {
     }
 
     const data = Array.from(groupedOutput.values());
+    const calendarStore = await Collection("calendar_store_shows");
+    const promises = [];
+
+    for (const item of data) {
+      promises.push(
+        calendarStore.updateOne(
+          {
+            slug: userSlug.ids.slug,
+            date: dayjs(
+              item.dateUnix * 1000 - (item.dateUnix % 86400) * 1000,
+            ).toDate(),
+          },
+          {
+            $set: {
+              slug: userSlug.ids.slug,
+              date: dayjs(
+                item.dateUnix * 1000 - (item.dateUnix % 86400) * 1000,
+              ).toDate(),
+              items: item.items,
+              size: item.items.length,
+              updatedAt: new Date(),
+            },
+          },
+          { upsert: true },
+        ),
+      );
+    }
+
+    await Promise.all(promises);
+
     await this.redis_client.set(cacheKey, JSON.stringify(data), "EX", 60);
     return data;
   }
@@ -224,6 +254,22 @@ export class ShowsUtil extends BaseUtil {
 
     const flattenedEpisodes = [];
     for (const episode of episodes) {
+      flattenedEpisodes.push(...episode.items);
+    }
+
+    const user = await this._request("/users/me", "GET");
+
+    // TODO: Optional extended as a user config
+    const calendarStore = await Collection("calendar_store_shows");
+    const pastEpisodes = await calendarStore
+      .find({
+        slug: user.ids.slug,
+        date: {
+          $lte: dayjs().subtract(days_ago, "day").toDate(),
+        },
+      })
+      .toArray();
+    for (const episode of pastEpisodes) {
       flattenedEpisodes.push(...episode.items);
     }
 

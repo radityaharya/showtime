@@ -11,4 +11,12 @@ const Page: React.FC<Props> = (props) => {
   );
 };
 
+export const PageWIthGradient: React.FC<Props> = (props) => {
+  return (
+    <div className="flex h-full w-full flex-col">
+      <div className="dark overflow-x-hidden text-white">{props.children}</div>
+    </div>
+  );
+}
+
 export default Page;

@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Suspense } from "react";
 import LazyLoad from "react-lazy-load";
 import { useEffect, useState } from "react";
+import {Img, buildImageUrl} from "../ImageProxy";
 
 interface PreviewItemType {
   itemLogo: string;
@@ -25,7 +26,6 @@ export const PreviewItem: React.FC<PreviewItemType> = ({
   subtitle,
   seasonNumber,
 }) => {
-  const formattedAiringAt = format(new Date(airingAt), "h:mma");
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -81,9 +81,9 @@ const PreviewItemContent: React.FC<PreviewItemType> = ({
         <div className="absolute top-0 left-0 w-full h-full bg-[#000000]/50 z-[1]"></div>
         <Image
           className="absolute object-cover z-[10] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-          alt=""
+          alt={`${title} logo`}
           src={itemLogo}
-          height={40}
+          height={60}
           width={100}
           loading="lazy"
         />

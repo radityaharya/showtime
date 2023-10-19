@@ -12,6 +12,7 @@ const nextConfig = {
       "qnhjmybhvmffhqxsggxx.supabase.co",
       "www.themoviedb.org",
       "image.tmdb.org",
+      "imgproxy.radityaharya.com",
     ],
     minimumCacheTTL: 60,
   },

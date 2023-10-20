@@ -17,13 +17,13 @@ const Home: customPageType = () => {
     <PageWIthGradient>
       <div className="items-left flex max-h-screen min-h-screen w-full flex-col overflow-auto">
         <div className="flex min-h-screen flex-col items-start justify-center py-2 pt-10 drop-shadow-md">
-          <div className="flex flex-col items-start gap-5 px-5 md:gap-10 md:px-20">
+          <div className="flex flex-col items-start gap-5 px-5 md:gap-6 md:px-20">
             <div className="flex flex-col items-start gap-4">
-              <div className="flex flex-col items-start gap-5">
-                <span className="w-350px text-left text-6xl text-gray-100">
+              <div className="flex flex-col items-start gap-2">
+                <span className="text-left text-7xl text-gray-100">
                   <span className="font-bold">Showtime</span>
                 </span>
-                <span className="max-w-[270px] text-left text-sm text-white">
+                <span className="max-w-[270px] text-left text-base text-white/80 font-medium">
                   <span>
                     Keep track of your favorite shows and movies with showtime.
                   </span>

@@ -23,6 +23,7 @@ export interface MappedEpisode {
     logo: string | undefined;
     airsAt: string;
     airsAtUnix: number;
+    providers: any;
     ids: {
       trakt: number | null;
       slug: string | null;
@@ -77,6 +78,7 @@ type Show = {
     posters: Image[];
   };
   details: any;
+  providers: any;
 };
 
 type AiredEpisode = {
@@ -144,13 +146,53 @@ export class ShowsUtil extends BaseUtil {
 
       if (Array.isArray(response)) {
         tmdbPromises = response.map(
-          async (item: { show: { ids: any; images: any; details: any } }) => {
+          async (item: {
+            show: {
+              providers: any;
+              ids: any;
+              images: any;
+              details: any;
+            };
+          }) => {
             const show_ids = item.show.ids;
             if (show_ids.tmdb) {
               const images = await tmdb.tv.getImages(show_ids.tmdb);
               item.show.images = images;
               const detail = await tmdb.tv.getDetails(show_ids.tmdb);
               item.show.details = detail;
+              const providers = await tmdb.tv.getWatchProviders(show_ids.tmdb);
+
+              const country = "ID";
+              let provider = null;
+              if (providers.results[country]) {
+                const countryProviders =
+                  providers.results[country].flatrate || [];
+                provider = countryProviders.reduce(
+                  (
+                    prev: { display_priority: number },
+                    current: { display_priority: number },
+                  ) => {
+                    return prev.display_priority < current.display_priority
+                      ? prev
+                      : current;
+                  },
+                );
+              } else {
+                if (providers.results.US) {
+                  const countryProviders = providers.results.US.flatrate || [];
+                  provider = countryProviders.reduce(
+                    (
+                      prev: { display_priority: number },
+                      current: { display_priority: number },
+                    ) => {
+                      return prev.display_priority < current.display_priority
+                        ? prev
+                        : current;
+                    },
+                  );
+                }
+              }
+              item.show.providers = provider;
             }
           },
         );
@@ -191,12 +233,19 @@ export class ShowsUtil extends BaseUtil {
           title: item.episode.title,
           overview: item.episode.overview || "",
           network: item.show.details?.networks?.[0]?.name || "",
+          networkLogo: `https://image.tmdb.org/t/p${item.show.details?.networks?.[0]?.logo_path}`,
           runtime: 30,
           background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
           logo: `https://image.tmdb.org/t/p/w500${item.show.images?.logos?.[0]?.file_path}`,
           airsAt: date.format(),
           airsAtUnix: dateUnix,
           ids: item.show.ids,
+          providers: {
+            display_priority: item.show.providers?.display_priority,
+            logo_path: `https://image.tmdb.org/t/p${item.show.providers?.logo_path}`,
+            provider_id: item.show.providers?.provider_id,
+            provider_name: item.show.providers?.provider_name,
+          },
         };
 
         if (groupedOutput.has(key)) {

@@ -32,7 +32,6 @@ export async function GET(
     const access_token = await response.json();
     const col = await Collection("users");
     const trakt = new TraktAPI();
-    console.log(access_token);
     const user_slug = await trakt._request("users/me", "GET", undefined, {
       Authorization: `Bearer ${access_token.access_token}`,
     });

@@ -2,15 +2,22 @@ import Image from "next/image";
 import { YoutubePlayer } from "../../components/YtPlayer_client";
 import { Skeleton } from "@/components/ui/skeleton";
 import TraktAPI from "../../lib/trakt/Trakt";
-import { ShowData } from "../types/schedule";
-import { MovieData } from "../types/schedule";
+import { ShowItem } from "../types/schedule";
 import { Collection } from "@/lib/mongo/mongo";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { Suspense } from "react";
+import {
+  JSXElementConstructor,
+  PromiseLikeOfReactNode,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+  Suspense,
+} from "react";
 import ScheduleView from "@/components/schedule/scheduleView";
+import TmdbAPI from "@/lib/tmdb/Tmdb";
 
 type PageProps = {
   params: {
@@ -21,8 +28,6 @@ export default async function UserPage({ params: { uid } }: PageProps) {
   const users = await Collection("users");
   const user = await users.findOne({ slug: uid });
   const session = await getServerSession(authOptions);
-
-  console.log(session);
 
   // if (!session) {
   //   return redirect("/auth");
@@ -36,10 +41,32 @@ export default async function UserPage({ params: { uid } }: PageProps) {
 
   const trakt = new TraktAPI(accessToken);
   const shows = (await trakt.Shows.getShowsBatch(2, 10)) as any;
+  const tmdb = new TmdbAPI();
+
+  const now = new Date().getTime() / 1000;
+  const first = shows.find((show: any) => show.dateUnix > now) || shows[0];
+  const firstShow =
+    first.items.find((item: any) => item.dateUnix > now) || first.items[0];
+
+  const video = await tmdb.tv.getTvVideos(firstShow.ids.tmdb);
+  const episodeVideo = await tmdb.tv.getEpisodeVideos(
+    firstShow.ids.tmdb,
+    firstShow.season,
+    firstShow.number,
+  );
+
+  const ytVideo = video.results.find(
+    (v: any) => v.site === "YouTube" && v.iso_3166_1 === "US",
+  );
+  const ytEpisodeVideo = episodeVideo.results.find(
+    (v: any) => v.site === "YouTube" && v.iso_3166_1 === "US",
+  );
+
+  const videoId = ytEpisodeVideo?.key || ytVideo?.key;
 
   return (
     <div>
-      {hero()}
+      {hero(firstShow, videoId)}
       <div className="relative pb-5 pt-16 px-2 md:px-20 bg-black w-full overflow-hidden flex flex-col text-left text-sm text-gray-100 font-text-2xl-font-semibold gap-10">
         <Suspense fallback={<p>Loading feed...</p>}>
           <ScheduleView initItems={shows} />
@@ -49,7 +76,7 @@ export default async function UserPage({ params: { uid } }: PageProps) {
   );
 }
 
-function hero() {
+function hero(itemData: ShowItem, videoId: string) {
   return (
     <div className="relative pb-10 pt-8 md:pt-16 px-4 md:px-20 bg-black w-full h-[100svh] min-h-[100svh] overflow-hidden flex flex-col text-left text-sm text-gray-100 font-text-2xl-font-semibold">
       <div
@@ -59,7 +86,10 @@ function hero() {
           backgroundColor: "rgba(0,0,0,0.5)",
         }}
       />
-      <YoutubePlayer videoId="4IlF715Yn00" />
+      <YoutubePlayer
+        videoId={videoId}
+        fallbackImg={itemData.background as string}
+      />
       <div className="self-stretch h-full flex flex-col items-center justify-between z-10">
         <div className="self-stretch flex flex-row items-center justify-between">
           <div className="flex flex-col items-start justify-start gap-2">
@@ -68,15 +98,24 @@ function hero() {
             </div>
             <div className="flex flex-col items-start justify-start gap-1 text-zinc-200">
               <h1 className="self-stretch relative text-4xl font-bold">
-                The Boys
+                {itemData.show}
               </h1>
               <div className="self-stretch relative text-xl font-medium text-gray-100">
-                Godolkin University - Orientation Video
+                {`S${itemData.number
+                  .toString()
+                  .padStart(2, "0")}E${itemData.season
+                  .toString()
+                  .padStart(2, "0")}: ${itemData.title}`}
               </div>
             </div>
           </div>
           <Image
-            src="https://www.themoviedb.org/t/p/h50_filter(negate,000,666)/ifhbNuuVnlwYy5oXA5VIb2YR8AZ.png"
+            src={
+              itemData.networkLogo.replace(
+                "/p/",
+                "/p/h50_filter(negate,000,666)/",
+              ) as string
+            }
             width={100}
             height={100}
             alt="network"
@@ -84,13 +123,13 @@ function hero() {
         </div>
         <div className="self-stretch flex flex-row items-end justify-between text-sm text-white">
           <div className="relative underline font-medium">Details</div>
-          <div className="flex flex-row items-end justify-center gap-[24px] text-base text-gray-100">
+          {/* <div className="flex flex-row items-end justify-center gap-[24px] text-base text-gray-100">
             <div className="flex-1 flex flex-col items-end justify-start">
               <div className="relative font-semibold">Next Up</div>
               <div className="flex flex-col items-end justify-start text-white">
                 <p className="font-bold">Loki</p>
                 <div className="relative text-md font-medium text-gray-100">
-                  S02E01: Episode 1
+                  {`S${itemData.number.toString().padStart(2, "0")}E${itemData.season.toString().padStart(2, "0")}: ${itemData.title}`}
                 </div>
               </div>
             </div>
@@ -104,7 +143,7 @@ function hero() {
               />
               <Skeleton className="absolute h-[150.51px] w-[100px] z-1" />
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

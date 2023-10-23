@@ -11,6 +11,13 @@ interface MovieItem {
   number?: number;
   airsAtUnix?: number;
   network?: string;
+  ids: {
+    trakt: number;
+    tvdb: number | null;
+    imdb: string | null;
+    tmdb: number | null;
+    tvrage: number | null;
+  };
 }
 
 interface MovieData {
@@ -38,6 +45,14 @@ interface ShowItem {
   logo?: string;
   releasedUnix?: number;
   network?: string;
+  networkLogo: string;
+  ids: {
+    trakt: number;
+    tvdb: number | null;
+    imdb: string | null;
+    tmdb: number | null;
+    tvrage: number | null;
+  };
 }
 
 interface ShowData {

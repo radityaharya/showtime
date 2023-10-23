@@ -1,66 +1,79 @@
 "use client";
 import { SessionProvider } from "next-auth/react";
 import { createContext, useContext, useState } from "react";
-import { ShowData, MovieData } from "../app/types/schedule";
 import dayjs from "dayjs";
+import { ShowData, MovieData } from "../app/types/schedule";
+import { ItemModalProvider } from "./schedule/itemModal";
+import { Dispatch, SetStateAction } from "react";
+import { Toaster } from "@/components/ui/toaster";
 
-export type contextType = {
-  state: {
-    calendar: {
-      type: "shows" | "movies";
-      // data: ShowData[] | MovieData[] | null
-      dateRange: {
-        from: Date;
-        to: Date;
-      };
-    };
-    user: {
-      uid: string | null;
-      name: string | null;
-      picture: string | null;
-    };
-  };
-  setState: React.Dispatch<
-    React.SetStateAction<{
-      calendar: {
-        type: "shows" | "movies";
-        // data: ShowData[] | MovieData[] | null;
-        dateRange: {
-          from: Date;
-          to: Date;
-        };
-      };
-      user: {
-        uid: string | null;
-        name: string | null;
-        picture: string | null;
-      };
-    }>
-  >;
+type CalendarType = "shows" | "movies";
+
+type AppProviderProps = {
+  children: React.ReactNode;
 };
-export const AppContext = createContext({} as contextType);
-export function Providers({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState({
-    calendar: {
-      type: "shows" as "shows" | "movies",
-      // data: null as ShowData[] | MovieData[] | null
-      dateRange: {
-        from: dayjs().subtract(2, "day").toDate(),
-        to: dayjs().add(90, "day").toDate(),
-      },
+
+type CalendarDateRange = {
+  from: Date;
+  to: Date;
+};
+
+type AppContextState = {
+  calendar: {
+    type: CalendarType;
+    dateRange: CalendarDateRange;
+  };
+  user: {
+    uid: string | null;
+    name: string | null;
+    picture: string | null;
+  };
+  itemModal: {
+    show: boolean;
+    data: null | any;
+  };
+};
+
+export type AppContextValue = {
+  state: AppContextState;
+  setState: Dispatch<SetStateAction<AppContextState>>;
+};
+
+const initialState: AppContextState = {
+  calendar: {
+    type: "shows",
+    dateRange: {
+      from: dayjs().subtract(2, "day").toDate(),
+      to: dayjs().add(90, "day").toDate(),
     },
-    user: {
-      uid: null as string | null,
-      name: null as string | null,
-      picture: null as string | null,
-    },
-  });
+  },
+  user: {
+    uid: null,
+    name: null,
+    picture: null,
+  },
+  itemModal: {
+    show: false,
+    data: null,
+  },
+};
+
+export const AppContext = createContext<AppContextValue>({
+  state: initialState,
+  setState: () => {},
+});
+
+export const Providers: React.FC<AppProviderProps> = ({ children }) => {
+  const [state, setState] = useState<AppContextState>(initialState);
 
   return (
     <SessionProvider>
       <AppContext.Provider value={{ state, setState }}>
-        {children}
+        <ItemModalProvider>
+          {children}
+          <Toaster />
+        </ItemModalProvider>
       </AppContext.Provider>
     </SessionProvider>
   );
-}
+};

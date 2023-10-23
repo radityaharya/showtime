@@ -1,15 +1,24 @@
 "use client";
 import YouTube, { YouTubeProps } from "react-youtube";
 import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
+import Image from "next/image";
 interface Props {
   videoId?: string;
+  fallbackImg: string;
   className?: string;
 }
 
-export const YoutubePlayer: React.FC<Props> = ({ videoId, ...Props }) => {
+export const YoutubePlayer: React.FC<Props> = ({
+  videoId,
+  fallbackImg,
+  ...Props
+}) => {
   const [hidden, setHidden] = useState(true);
   const [clientSize, setClientSize] = useState({ width: 0, height: 0 });
+  const [fallback, setFallback] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleResize = () => {
@@ -42,34 +51,67 @@ export const YoutubePlayer: React.FC<Props> = ({ videoId, ...Props }) => {
   };
 
   const onReady = (event: any) => {
+    const state = event.target.getPlayerState();
+    if (state === -1) {
+      toast({
+        title: "Whoops!",
+        description: "This video is not available.",
+      });
+      setFallback(true);
+    }
     setTimeout(() => {
       setHidden(false);
     }, 6000);
   };
 
+  useEffect(() => {
+    // after 2 seconds delay, show the video
+    setTimeout(() => {
+      setFallback(false);
+    }, 2000);
+  }, []);
+
   const onEnd = (event: any) => {
     event.target.playVideo();
   };
 
+  const onError = (event: any) => {
+    setFallback(true);
+  };
+
   return (
     <div className="absolute top-0 left-0 max-w-screen max-h-screen w-full h-full bg-black/20 overflow-hidden">
-      <div
-        className={`absolute top-0 left-0 w-full h-full opacity-50 ${
-          hidden ? "opacity-0" : "opacity-100"
-        } transition-opacity duration-1000 ease-in-out`}
-      />
-      <YouTube
-        videoId={videoId ?? "4IlF715Yn00"}
-        opts={opts}
-        onReady={onReady}
-        onEnd={onEnd}
-        className={`absolute z-0 top-0 left-0 w-full h-full overflow-hidden transform ${
-          hidden ? "opacity-0" : "opacity-100"
-        } transition-opacity duration-1000 ease-in-out ${
-          hidden ? "scale-100" : "scale-110"
-        } transition-transform duration-1000 ease-in-out ${Props.className}`}
-        style={{ pointerEvents: "none" }}
-      />
+      {fallback ? (
+        <Image
+          src={fallbackImg.replace("w500", "original")}
+          alt="Fallback image"
+          className="absolute top-0 left-0 w-full h-full object-cover"
+          fill
+        />
+      ) : (
+        <>
+          <div
+            className={`absolute top-0 left-0 w-full h-full opacity-50 ${
+              hidden ? "opacity-0" : "opacity-100"
+            } transition-opacity duration-1000 ease-in-out`}
+          />
+          <YouTube
+            videoId={videoId}
+            opts={opts}
+            onReady={onReady}
+            onEnd={onEnd}
+            // onError={onError}
+            className={`absolute z-0 top-0 left-0 w-full h-full overflow-hidden transform ${
+              hidden ? "opacity-0" : "opacity-100"
+            } transition-opacity duration-1000 ease-in-out ${
+              hidden ? "scale-100" : "scale-110"
+            } transition-transform duration-1000 ease-in-out ${
+              Props.className
+            }`}
+            style={{ pointerEvents: "none" }}
+          />
+        </>
+      )}
     </div>
   );
 };

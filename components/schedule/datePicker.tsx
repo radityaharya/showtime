@@ -19,14 +19,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState, useContext, useEffect } from "react";
-import { AppContext, type contextType } from "../provider";
+import { AppContext, type AppContextValue } from "../provider";
 import { DateRange } from "react-day-picker";
 import dayjs from "dayjs";
 
 export function RangeDatePicker({
   className,
 }: React.HTMLAttributes<HTMLDivElement>) {
-  const { state, setState } = useContext(AppContext) as contextType;
+  const { state, setState } = useContext(AppContext) as AppContextValue;
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: state.calendar.dateRange.from,

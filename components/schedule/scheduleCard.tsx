@@ -25,7 +25,11 @@ const ScheduleItems: React.FC<Props> = ({ Shows }) => {
         <div className="flex flex-row w-full items-start justify-center md:justify-start gap-5 flex-wrap">
           {Shows?.items.map((show) => (
             <PreviewItem
-              key={show.airsAtUnix}
+              key={
+                show?.season && show?.number
+                  ? `${show.ids.tmdb}_s${show.season}e${show.number}`
+                  : show.ids.tmdb
+              }
               itemLogo={
                 show.logo ? show.logo : "https://placehold.co/154.77x60"
               }
@@ -40,6 +44,7 @@ const ScheduleItems: React.FC<Props> = ({ Shows }) => {
               episodeNumber={show?.number?.toString() || "N/A"}
               subtitle={show.show || "N/A"}
               seasonNumber={show?.season?.toString() || "N/A"}
+              ids={show.ids}
             />
           ))}
         </div>

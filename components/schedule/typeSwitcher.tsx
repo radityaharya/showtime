@@ -11,10 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useContext } from "react";
-import { AppContext, type contextType } from "../provider";
+import { AppContext, type AppContextValue } from "../provider";
 
 export function TypeSwitcher() {
-  const { state, setState } = useContext(AppContext) as contextType;
+  const { state, setState } = useContext(AppContext) as AppContextValue;
 
   return (
     <DropdownMenu>

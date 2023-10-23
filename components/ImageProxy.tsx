@@ -1,8 +1,7 @@
-import React from 'react';
-import Image from 'next/image';
-import pb, { ResizeType, BuildOptions } from '@bitpatty/imgproxy-url-builder';
-import { format } from 'date-fns';
-
+import React from "react";
+import Image from "next/image";
+import pb, { ResizeType, BuildOptions } from "@bitpatty/imgproxy-url-builder";
+import { format } from "date-fns";
 
 interface Props {
   src: string;
@@ -11,12 +10,11 @@ interface Props {
   style?: React.CSSProperties;
   width?: number;
   height?: number;
-  loading?: 'lazy' | 'eager';
+  loading?: "lazy" | "eager";
 }
 
 const Img: React.FC<Props> = (props) => {
-  
-  if (!props.src || props.src === '' || props.src === undefined) {
+  if (!props.src || props.src === "" || props.src === undefined) {
     return <></>;
   }
 
@@ -30,20 +28,19 @@ const Img: React.FC<Props> = (props) => {
     },
   };
 
-  const resizeOptions= {
+  const resizeOptions = {
     type: ResizeType.FIT,
     width: props.width ? props.width * 2 : 1000,
     height: props.height ? props.height * 2 : 600,
-  }
-  
-  const srcUrl = pb()
-  // .resize(resizeOptions)
-  .format('webp')
-  // .fallbackImageUrl(props.src)
-  // .keepCopyright()
-  .quality(80)
-  .build(buildOptions);
+  };
 
+  const srcUrl = pb()
+    // .resize(resizeOptions)
+    .format("webp")
+    // .fallbackImageUrl(props.src)
+    // .keepCopyright()
+    .quality(80)
+    .build(buildOptions);
 
   return (
     <Image
@@ -65,10 +62,10 @@ interface UrlBuilderOptions {
 }
 
 function buildImageUrl({ src, width, height }: UrlBuilderOptions): string {
-  if (!src || src === '' || src === undefined) {
-    return '';
+  if (!src || src === "" || src === undefined) {
+    return "";
   }
-  
+
   const buildOptions: BuildOptions = {
     plain: false,
     path: src,
@@ -79,18 +76,18 @@ function buildImageUrl({ src, width, height }: UrlBuilderOptions): string {
     },
   };
 
-  let resizeOptions = {}
-  if (width && height) { 
-  resizeOptions = {
-    type: ResizeType.FIT,
-    width: width ? width * 2 : 1000,
-    height: height ? height * 2 : 600,
-  };
+  let resizeOptions = {};
+  if (width && height) {
+    resizeOptions = {
+      type: ResizeType.FIT,
+      width: width ? width * 2 : 1000,
+      height: height ? height * 2 : 600,
+    };
   }
 
   const srcUrl = pb()
     // .resize(resizeOptions)
-    .format('webp')
+    .format("webp")
     // .fallbackImageUrl(src)
     // .keepCopyright()
     .quality(80)
@@ -99,4 +96,4 @@ function buildImageUrl({ src, width, height }: UrlBuilderOptions): string {
   return srcUrl;
 }
 
-export { Img, buildImageUrl}
+export { Img, buildImageUrl };

@@ -4,7 +4,7 @@ import { MovieData } from "../../app/types/schedule";
 import ScheduleItems from "@/components/schedule/scheduleCard";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef, useContext } from "react";
-import { AppContext, type contextType } from "../provider";
+import { AppContext, type AppContextValue } from "../provider";
 import { RangeDatePicker } from "./datePicker";
 import { TypeSwitcher } from "./typeSwitcher";
 import { AddToCalendar } from "./addToCalendar";
@@ -23,7 +23,7 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
   const path = usePathname();
   const uid = path.split("/")[1];
 
-  const { state, setState } = useContext(AppContext) as contextType;
+  const { state, setState } = useContext(AppContext) as AppContextValue;
 
   const [Items, setItems] = useState(initItems as Items);
 
@@ -56,19 +56,19 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
           // Store data in local storage
           localStorage.setItem(
             url,
-            JSON.stringify({ data: data.data, date: Date.now() })
+            JSON.stringify({ data: data.data, date: Date.now() }),
           );
         });
-    }, 500)
+    }, 500),
   ).current;
 
   useEffect(() => {
     debouncedFetch(
       `/api/user/${uid}/calendar/${state.calendar.type}?dateStart=${dayjs(
-        state.calendar.dateRange.from
+        state.calendar.dateRange.from,
       ).format("YYYY-MM-DD")}&dateEnd=${dayjs(
-        state.calendar.dateRange.to
-      ).format("YYYY-MM-DD")}`
+        state.calendar.dateRange.to,
+      ).format("YYYY-MM-DD")}`,
     );
   }, [debouncedFetch, state.calendar.type, uid, state.calendar.dateRange]);
 

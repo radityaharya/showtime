@@ -1,9 +1,11 @@
 import Image from "next/image";
 import { format } from "date-fns";
-import { Suspense } from "react";
+import { Suspense, useContext } from "react";
 import LazyLoad from "react-lazy-load";
 import { useEffect, useState } from "react";
-import {Img, buildImageUrl} from "../ImageProxy";
+import { Img, buildImageUrl } from "../ImageProxy";
+import dynamic from "next/dynamic";
+import { AppContext, type AppContextValue } from "../provider";
 
 interface PreviewItemType {
   itemLogo: string;
@@ -14,6 +16,8 @@ interface PreviewItemType {
   episodeNumber?: string;
   subtitle?: string;
   seasonNumber?: string;
+  ids?: any;
+  onClick?: () => void;
 }
 
 export const PreviewItem: React.FC<PreviewItemType> = ({
@@ -25,12 +29,36 @@ export const PreviewItem: React.FC<PreviewItemType> = ({
   episodeNumber,
   subtitle,
   seasonNumber,
+  ids,
 }) => {
   const [isClient, setIsClient] = useState(false);
+  const { state, setState } = useContext(AppContext) as AppContextValue;
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  function handleModal() {
+    console.log("clicked");
+    setState({
+      ...state,
+      itemModal: {
+        ...state.itemModal,
+        show: true,
+        data: {
+          title: title,
+          background: itemBackdrop,
+          logo: itemLogo,
+          airsAtUnix: airingAt,
+          network: pillInfo,
+          number: episodeNumber,
+          show: subtitle,
+          season: seasonNumber,
+          ids: ids,
+        },
+      },
+    });
+  }
 
   return (
     <>
@@ -45,6 +73,8 @@ export const PreviewItem: React.FC<PreviewItemType> = ({
             episodeNumber={episodeNumber}
             subtitle={subtitle}
             seasonNumber={seasonNumber}
+            ids={ids}
+            onClick={handleModal}
           />
         </LazyLoad>
       ) : (
@@ -57,6 +87,8 @@ export const PreviewItem: React.FC<PreviewItemType> = ({
           episodeNumber={episodeNumber}
           subtitle={subtitle}
           seasonNumber={seasonNumber}
+          ids={ids}
+          onClick={handleModal}
         />
       )}
     </>
@@ -72,11 +104,16 @@ const PreviewItemContent: React.FC<PreviewItemType> = ({
   episodeNumber,
   subtitle,
   seasonNumber,
+  ids,
+  onClick,
 }) => {
   const formattedAiringAt = format(new Date(airingAt), "h:mma");
 
   return (
-    <div className="rounded-lg box-border w-full md:w-[395px] h-[292px] overflow-hidden flex flex-col items-start justify-start text-left text-2xs text-floralwhite-100 font-text-sm-font-normal border-[2px] border-solid border-floralwhite-200">
+    <div
+      className="rounded-lg box-border w-full md:w-[395px] h-[292px] overflow-hidden flex flex-col items-start justify-start text-left text-2xs text-floralwhite-100 font-text-sm-font-normal border-[2px] border-solid border-floralwhite-200 cursor-pointer hover:border-floralwhite-100/50 transition-colors duration-300 ease-in-out"
+      onClick={onClick}
+    >
       <div className="relative h-[138px] w-full">
         <div className="absolute top-0 left-0 w-full h-full bg-[#000000]/50 z-[1]"></div>
         <Image

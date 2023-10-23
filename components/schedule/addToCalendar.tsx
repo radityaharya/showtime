@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { AppContext, type contextType } from "../provider";
+import { AppContext, type AppContextValue } from "../provider";
 import { useContext, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 
 export const AddToCalendar: React.FC = () => {
-  const { state, setState } = useContext(AppContext) as contextType;
+  const { state, setState } = useContext(AppContext) as AppContextValue;
 
   const [host, setHost] = useState("");
   const user = usePathname().split("/")[1];
@@ -26,14 +26,23 @@ export const AddToCalendar: React.FC = () => {
     protocol: "webcal" | "google" | "outlook365" | "outlooklive",
   ) {
     const calendarType = state.calendar.type;
-    const webcal_url = `${host}/api/${user}/calendar/${calendarType}/ical`
-      .replace(/^https?:/, "webcal:");
+    const webcal_url =
+      `${host}/api/${user}/calendar/${calendarType}/ical`.replace(
+        /^https?:/,
+        "webcal:",
+      );
 
     const urls = {
       webcal: webcal_url,
-      google: `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal_url)}`,
-      outlook365: `https://outlook.office.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription&url=${encodeURIComponent(webcal_url)}&name=Trakt%20iCal`,
-      outlooklive: `https://outlook.live.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription&url=${encodeURIComponent(webcal_url)}&name=Trakt%20iCal`,
+      google: `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(
+        webcal_url,
+      )}`,
+      outlook365: `https://outlook.office.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription&url=${encodeURIComponent(
+        webcal_url,
+      )}&name=Trakt%20iCal`,
+      outlooklive: `https://outlook.live.com/owa?path=%2Fcalendar%2Faction%2Fcompose&rru=addsubscription&url=${encodeURIComponent(
+        webcal_url,
+      )}&name=Trakt%20iCal`,
     };
 
     return urls[protocol];

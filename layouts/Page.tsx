@@ -17,6 +17,6 @@ export const PageWIthGradient: React.FC<Props> = (props) => {
       <div className="dark overflow-x-hidden text-white">{props.children}</div>
     </div>
   );
-}
+};
 
 export default Page;

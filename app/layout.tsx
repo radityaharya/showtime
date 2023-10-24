@@ -1,10 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
-// import { Inter } from "next/font/google";
+import { Open_Sans } from "next/font/google";
 import { Providers } from "../components/provider";
 import GradientBackground from "@/components/landing/GradientsBackground";
 
-// const inter = Inter({ subsets: ["latin"] });
+const open_sans = Open_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Showtime",
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`dark ${open_sans.className}`}>
       <body>
         <GradientBackground showGradient={true} />
         <Providers>{children}</Providers>

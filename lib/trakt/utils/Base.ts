@@ -1,4 +1,6 @@
-import { Collection } from "@/lib/mongo/mongo";
+// import clientPromise from "@/lib/mongo/mongoPromise";
+import { Users } from "@/lib/util/users";
+import { on } from "events";
 const Redis = require("ioredis");
 export const MAX_DAYS_AGO = 360;
 export const MAX_PERIOD = 390;
@@ -23,7 +25,10 @@ export class BaseUtil {
   private user_slug?: string;
   private api_url: string;
 
-  constructor(accessToken?: AccessToken, user_slug?: string) {
+  constructor(
+    accessToken: AccessToken | undefined,
+    user_slug: string | undefined,
+  ) {
     this.client_id = process.env.TRAKT_CLIENT_ID!;
     this.client_secret = process.env.TRAKT_CLIENT_SECRET!;
     this.redirect_uri = process.env.HOST + "/api/trakt/callback";
@@ -42,10 +47,19 @@ export class BaseUtil {
     query?: any,
   ) {
     const url = new URL(path, this.api_url);
-
     if (query) {
       const searchParams = new URLSearchParams(query);
       url.search = searchParams.toString();
+    }
+
+    if (this.user_slug !== undefined && this.accessToken === undefined) {
+      const users = new Users();
+      const token = await users.getAccessToken(this.user_slug);
+      if (await this._isAccesTokenExpired(token)) {
+        console.info("Refreshing access token for", this.user_slug);
+        await this.refreshAccessToken(token);
+      }
+      this.accessToken = token;
     }
 
     let oauth_token;
@@ -88,17 +102,6 @@ export class BaseUtil {
     return response.text(); // or handle non-JSON response
   }
 
-  async slugToToken(slug: string) {
-    const col = await Collection("users");
-    const user = await col.findOne({ slug });
-
-    if (!user) {
-      throw new Error(`User ${slug} not found`);
-    }
-
-    return user.access_token.access_token;
-  }
-
   async _isAccesTokenExpired(access_token: AccessToken) {
     const { expires_in, created_at } = access_token.access_token;
     const isTokenExpired = Date.now() / 1000 > created_at + expires_in;
@@ -121,15 +124,8 @@ export class BaseUtil {
     const slug = this._request("/users/me", "GET").then(
       (res) => res.user.ids.slug,
     );
-    const users = await Collection("users");
 
-    await users.updateOne(
-      { slug: slug },
-      {
-        $set: {
-          access_token: newAccessToken,
-        },
-      },
-    );
+    const users = new Users();
+    await users.refreshAccessToken(await slug, newAccessToken);
   }
 }

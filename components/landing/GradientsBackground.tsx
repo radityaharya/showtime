@@ -22,6 +22,7 @@ export const GradientBackground: React.FC<Props> = (props) => {
 
   useEffect(() => {
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       const canvas = canvasRef.current;
       if (canvas) {
         const context = canvas.getContext("2d");

@@ -32,7 +32,7 @@
     "dayjs": "^1.11.10",
     "eslint": "8.49.0",
     "eslint-config-next": "13.4.19",
-    "eslint-plugin-prettier": "^5.0.1",
+    "eslint-config-standard": "^17.1.0",
     "fernet": "^0.4.0",
     "ical-generator": "^5.0.1",
     "ioredis": "^5.3.2",
@@ -40,7 +40,7 @@
     "mongodb": "^6.1.0",
     "next": "^13.5.6",
     "next-auth": "^4.23.2",
-    "postcss": "8.4.29",
+    "postcss": "^8.4.31",
     "react": "18.2.0",
     "react-day-picker": "^8.9.0",
     "react-dom": "18.2.0",
@@ -54,6 +54,8 @@
     "typescript": "5.2.2"
   },
   "devDependencies": {
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
     "prettier": "^3.0.3",
     "prettier-plugin-tailwindcss": "^0.5.4"
   }

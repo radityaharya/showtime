@@ -1,23 +1,15 @@
 import Image from "next/image";
 import { YoutubePlayer } from "../../components/YtPlayer_client";
-import { Skeleton } from "@/components/ui/skeleton";
 import TraktAPI from "../../lib/trakt/Trakt";
 import { ShowItem } from "../types/schedule";
-import { Collection } from "@/lib/mongo/mongo";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import {
-  JSXElementConstructor,
-  PromiseLikeOfReactNode,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
-  Suspense,
-} from "react";
+import { Suspense } from "react";
 import ScheduleView from "@/components/schedule/scheduleView";
 import TmdbAPI from "@/lib/tmdb/Tmdb";
+import clientPromise from "@/lib/mongo/mongoPromise";
 
 type PageProps = {
   params: {
@@ -25,19 +17,45 @@ type PageProps = {
   };
 };
 export default async function UserPage({ params: { uid } }: PageProps) {
-  const users = await Collection("users");
-  const user = await users.findOne({ slug: uid });
+  const db = (await clientPromise).db("test");
+  const collection = db.collection("nextauth_accounts");
   const session = await getServerSession(authOptions);
 
-  // if (!session) {
-  //   return redirect("/auth");
-  // }
+  const user = session?.user;
+
+  if (!session) {
+    return redirect("/auth");
+  }
 
   if (!user) {
     return notFound();
   }
 
-  const accessToken = user?.access_token;
+  if (user.name !== uid) {
+    return redirect(`/user/${user?.name}`);
+  }
+
+  const slug = user?.name as string;
+  const nextauthAccount = await collection.findOne({
+    providerAccountId: user?.name,
+    provider: "trakt",
+  });
+
+  if (!nextauthAccount) {
+    return notFound();
+  }
+
+  const accessToken = {
+    slug,
+    access_token: nextauthAccount?.access_token,
+    refresh_token: nextauthAccount?.refresh_token,
+    // expires_at: nextauthAccount?.expires_at,
+    expires_in:
+      (nextauthAccount?.expires_at as number) - Math.floor(Date.now() / 1000),
+    token_type: nextauthAccount?.token_type,
+    scope: nextauthAccount?.scope,
+    created_at: nextauthAccount?.created_at,
+  };
 
   const trakt = new TraktAPI(accessToken);
   const shows = (await trakt.Shows.getShowsBatch(2, 10)) as any;

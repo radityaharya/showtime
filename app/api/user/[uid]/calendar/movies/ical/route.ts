@@ -1,6 +1,5 @@
 import { TraktAPI } from "@/lib/trakt/Trakt";
 import { NextResponse } from "next/server";
-import { Collection } from "@/lib/mongo/mongo";
 export async function GET(
   request: Request,
   {
@@ -22,12 +21,7 @@ export async function GET(
       throw new Error("days_ago and period must be integers");
     }
 
-    const col = await Collection("users");
-    const user = await col.findOne({ slug: params.uid });
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-    const trakt = new TraktAPI(user.access_token);
+    const trakt = new TraktAPI(undefined, params.uid);
     const cal = (await trakt.Shows.getShowsCalendar(days_ago, period)).toBlob();
     return new NextResponse(cal, {
       headers: {

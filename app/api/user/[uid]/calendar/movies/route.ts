@@ -1,6 +1,6 @@
 import { TraktAPI } from "@/lib/trakt/Trakt";
 import { NextResponse } from "next/server";
-import { Collection } from "@/lib/mongo/mongo";
+import { Users } from "@/lib/util/users";
 // const Redis = require("ioredis");
 
 export async function GET(
@@ -39,30 +39,7 @@ export async function GET(
       );
     }
 
-    const col = await Collection("users");
-    const user = await col.findOne({ slug: params.uid });
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    // const key = `trakt-${request.url.split("/api")[1]}`;
-
-    // const redis = new Redis(process.env.REDIS_URL);
-
-    // const cached = await redis.get(key);
-
-    // if (cached) {
-    //   console.log(`cached: ${key}`);
-    //   return NextResponse.json(JSON.parse(cached), {
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "Cache-Control": "s-maxage=1200 , stale-while-revalidate",
-    //       "X-Redis-Cache": "HIT",
-    //     },
-    //   });
-    // }
-
-    const trakt = new TraktAPI(user.access_token);
+    const trakt = new TraktAPI(undefined, params.uid);
 
     const body = {
       data: await trakt.Movies.getMoviesBatch(

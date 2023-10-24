@@ -7,7 +7,7 @@ export class TraktAPI extends BaseUtil {
   public Shows: ShowsUtil;
   public Movies: MoviesUtil;
   constructor(accessToken?: AccessToken, user_slug?: string) {
-    super(accessToken);
+    super(accessToken, user_slug);
     this.Shows = new ShowsUtil(accessToken, user_slug);
     this.Movies = new MoviesUtil(accessToken, user_slug);
   }

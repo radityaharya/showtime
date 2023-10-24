@@ -9,6 +9,7 @@ const collection_prefix = process.env.MONGO_COLLECTION_PREFIX || "nextauth_";
 export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
   adapter: MongoDBAdapter(clientPromise, {
+    databaseName: "test",
     collections: {
       Users: `${collection_prefix}users`,
       Accounts: `${collection_prefix}accounts`,

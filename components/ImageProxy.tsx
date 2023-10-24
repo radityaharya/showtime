@@ -1,7 +1,7 @@
+/* eslint-disable no-unused-vars */
 import React from "react";
 import Image from "next/image";
 import pb, { ResizeType, BuildOptions } from "@bitpatty/imgproxy-url-builder";
-import { format } from "date-fns";
 
 interface Props {
   src: string;

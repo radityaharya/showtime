@@ -1,5 +1,4 @@
-import { BaseUtil } from "./Base";
-import { MAX_DAYS_AGO, MAX_PERIOD } from "./Base";
+import { BaseUtil, MAX_DAYS_AGO, MAX_PERIOD } from "./Base";
 import ical from "ical-generator";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -299,7 +298,7 @@ export class ShowsUtil extends BaseUtil {
   }
 
   async getShowsCalendar(days_ago = 30, period = 90) {
-    let episodes = await this.getShowsBatch(days_ago, period);
+    const episodes = await this.getShowsBatch(days_ago, period);
 
     const flattenedEpisodes = [];
     for (const episode of episodes) {
@@ -347,8 +346,8 @@ export class ShowsUtil extends BaseUtil {
             : episode.title;
           cal.createEvent({
             start: new Date(episode.airsAtUnix * 1000),
-            summary: summary,
-            description: description,
+            summary,
+            description,
             location: show_detail
               ? show_detail.networks[0].name
               : episode.network,

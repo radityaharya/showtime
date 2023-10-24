@@ -13,7 +13,7 @@ export async function GET(
 ) {
   const code = request.url.split("?code=")[1];
   const data = {
-    code: code,
+    code,
     client_id: process.env.TRAKT_CLIENT_ID,
     client_secret: process.env.TRAKT_CLIENT_SECRET,
     redirect_uri: process.env.HOST + "/api/trakt/callback",
@@ -44,14 +44,14 @@ export async function GET(
         { slug: user_slug },
         {
           $set: {
-            access_token: access_token,
+            access_token,
           },
         },
       );
     } else {
       await col.insertOne({
         slug: user_slug,
-        access_token: access_token,
+        access_token,
       });
     }
   } catch (error) {

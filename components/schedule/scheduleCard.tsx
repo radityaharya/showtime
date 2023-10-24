@@ -5,6 +5,7 @@ interface Props {
   Shows: ShowData | MovieData;
 }
 
+// eslint-disable-next-line no-undef
 const ScheduleItems: React.FC<Props> = ({ Shows }) => {
   return (
     <div className="self-stretch sm:w-full overflow-hidden flex flex-col items-start justify-center md:justify-start gap-[2.5rem]">

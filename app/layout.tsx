@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import "./globals.css";
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
   title: "Showtime",
   description: "Keep track of your favorite shows and movies with showtime.",
 };
+
 export default function RootLayout({
   children,
 }: {

@@ -1,10 +1,7 @@
 import Image from "next/image";
 import { format } from "date-fns";
-import { Suspense, useContext } from "react";
 import LazyLoad from "react-lazy-load";
-import { useEffect, useState } from "react";
-import { Img, buildImageUrl } from "../ImageProxy";
-import dynamic from "next/dynamic";
+import { useEffect, useState, Suspense, useContext } from "react";
 import { AppContext, type AppContextValue } from "../provider";
 
 interface PreviewItemType {
@@ -20,6 +17,7 @@ interface PreviewItemType {
   onClick?: () => void;
 }
 
+// eslint-disable-next-line no-undef
 export const PreviewItem: React.FC<PreviewItemType> = ({
   itemLogo,
   itemBackdrop,
@@ -46,7 +44,7 @@ export const PreviewItem: React.FC<PreviewItemType> = ({
         ...state.itemModal,
         show: true,
         data: {
-          title: title,
+          title,
           background: itemBackdrop,
           logo: itemLogo,
           airsAtUnix: airingAt,
@@ -54,7 +52,7 @@ export const PreviewItem: React.FC<PreviewItemType> = ({
           number: episodeNumber,
           show: subtitle,
           season: seasonNumber,
-          ids: ids,
+          ids,
         },
       },
     });
@@ -95,6 +93,7 @@ export const PreviewItem: React.FC<PreviewItemType> = ({
   );
 };
 
+// eslint-disable-next-line no-undef
 const PreviewItemContent: React.FC<PreviewItemType> = ({
   itemLogo,
   itemBackdrop,

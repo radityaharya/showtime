@@ -10,6 +10,7 @@ interface Props {
   className?: string;
 }
 
+// eslint-disable-next-line no-undef
 export const YoutubePlayer: React.FC<Props> = ({
   videoId,
   fallbackImg,
@@ -73,10 +74,6 @@ export const YoutubePlayer: React.FC<Props> = ({
 
   const onEnd = (event: any) => {
     event.target.playVideo();
-  };
-
-  const onError = (event: any) => {
-    setFallback(true);
   };
 
   return (

@@ -1,6 +1,7 @@
 import clientPromise from "../mongo/mongoPromise";
 
 const NEXTAUTH_DB = "test";
+// eslint-disable-next-line no-unused-vars
 const NEXTAUTH_USERS_COLLECTION = "nextauth_users";
 const NEXTAUTH_ACCOUNTS_COLLECTION = "nextauth_accounts";
 

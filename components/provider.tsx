@@ -1,15 +1,14 @@
 "use client";
 import { SessionProvider } from "next-auth/react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useState, Dispatch, SetStateAction } from "react";
 import dayjs from "dayjs";
-import { ShowData, MovieData } from "../app/types/schedule";
 import { ItemModalProvider } from "./schedule/itemModal";
-import { Dispatch, SetStateAction } from "react";
 import { Toaster } from "@/components/ui/toaster";
 
 type CalendarType = "shows" | "movies";
 
 type AppProviderProps = {
+  // eslint-disable-next-line no-undef
   children: React.ReactNode;
 };
 
@@ -63,6 +62,7 @@ export const AppContext = createContext<AppContextValue>({
   setState: () => {},
 });
 
+// eslint-disable-next-line no-undef
 export const Providers: React.FC<AppProviderProps> = ({ children }) => {
   const [state, setState] = useState<AppContextState>(initialState);
 

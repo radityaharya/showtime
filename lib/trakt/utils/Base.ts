@@ -1,6 +1,5 @@
 // import clientPromise from "@/lib/mongo/mongoPromise";
 import { Users } from "@/lib/util/users";
-import { on } from "events";
 const Redis = require("ioredis");
 export const MAX_DAYS_AGO = 360;
 export const MAX_PERIOD = 390;
@@ -39,6 +38,7 @@ export class BaseUtil {
       keepAlive: 5000,
     });
   }
+
   async _request(
     path: string,
     method: "GET" | "POST" | "PUT" | "DELETE",
@@ -72,8 +72,8 @@ export class BaseUtil {
       oauth_token = this.accessToken.access_token;
     }
 
-    if (headers && headers["Authorization"]) {
-      oauth_token = headers["Authorization"].split(" ")[1];
+    if (headers && headers.Authorization) {
+      oauth_token = headers.Authorization.split(" ")[1];
     }
 
     const response = await fetch(url.toString(), {

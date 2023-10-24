@@ -1,6 +1,5 @@
 import { TraktAPI } from "@/lib/trakt/Trakt";
 import { NextResponse } from "next/server";
-import { Users } from "@/lib/util/users";
 // const Redis = require("ioredis");
 
 export async function GET(

@@ -1,5 +1,4 @@
-import { BaseUtil } from "./Base";
-import { MAX_DAYS_AGO, MAX_PERIOD } from "./Base";
+import { BaseUtil, MAX_DAYS_AGO, MAX_PERIOD } from "./Base";
 import ical from "ical-generator";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -31,6 +30,7 @@ export interface MappedMovies {
   }[];
 }
 
+// eslint-disable-next-line no-unused-vars
 type Image = {
   aspect_ratio: number;
   height: number;
@@ -188,8 +188,9 @@ export class MoviesUtil extends BaseUtil {
 
     return data;
   }
+
   async getMoviesCalendar(days_ago = 30, period = 90) {
-    let entries = await this.getMoviesBatch(days_ago, period);
+    const entries = await this.getMoviesBatch(days_ago, period);
 
     const flattenedEntries = [];
     for (const entry of entries) {
@@ -228,8 +229,8 @@ export class MoviesUtil extends BaseUtil {
         : entry.title;
       cal.createEvent({
         start: new Date(entry.airsAtUnix * 1000),
-        summary: summary,
-        description: description,
+        summary,
+        description,
         location: entry.status,
       });
     }

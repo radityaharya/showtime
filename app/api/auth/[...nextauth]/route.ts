@@ -1,9 +1,7 @@
-import NextAuth, { NextAuthOptions, Session } from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import TraktProvider from "next-auth/providers/trakt";
-import GoogleProvider from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "../../../../lib/mongo/mongoPromise";
-import { getServerSession } from "next-auth";
 
 const collection_prefix = process.env.MONGO_COLLECTION_PREFIX || "nextauth_";
 export const authOptions: NextAuthOptions = {

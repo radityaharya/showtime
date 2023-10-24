@@ -1,4 +1,5 @@
 // @ts-nocheck
+/* eslint-disable */
 /*
  *   Stripe WebGl Gradient Animation by Stripe.com
  *   ScrollObserver functionality to disable animation when not scrolled into view has been disabled and
@@ -579,8 +580,11 @@ export class Gradient {
             this.minigl.render();
         }
         if (0 !== this.last && this.isStatic)
-          return this.minigl.render(), void this.disconnect();
-        /*this.isIntersecting && */ (this.conf.playing || this.isMouseDown) &&
+          return (
+            this.minigl.render(), void this.disconnect()
+            /*this.isIntersecting && */
+          );
+        (this.conf.playing || this.isMouseDown) &&
           requestAnimationFrame(this.animate);
       }),
       e(this, "addIsLoadedClass", () => {

@@ -1,6 +1,5 @@
 "use client";
-import { ShowData } from "../../app/types/schedule";
-import { MovieData } from "../../app/types/schedule";
+import { MovieData, ShowData } from "../../app/types/schedule";
 import ScheduleItems from "@/components/schedule/scheduleCard";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef, useContext } from "react";
@@ -19,17 +18,18 @@ interface Props {
 
 type Items = ShowData[] | MovieData[];
 
+// eslint-disable-next-line no-undef
 const ScheduleView: React.FC<Props> = ({ initItems }) => {
   const path = usePathname();
   const uid = path.split("/")[1];
 
-  const { state, setState } = useContext(AppContext) as AppContextValue;
+  const { state } = useContext(AppContext) as AppContextValue;
 
   const [Items, setItems] = useState(initItems as Items);
 
-  const [page, setPage] = useState(1);
+  // const [page, setPage] = useState(1);
 
-  const [hasMore, setHasMore] = useState(true);
+  // const [hasMore, setHasMore] = useState(true);
 
   const [isDataLoading, setIsDataLoading] = useState(true);
 
@@ -72,29 +72,29 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
     );
   }, [debouncedFetch, state.calendar.type, uid, state.calendar.dateRange]);
 
-  function handleTypeToggle() {
-    const newType = state.calendar.type === "shows" ? "movies" : "shows";
-    setItems([]);
-    setState((prevState) => ({
-      ...prevState,
-      calendar: {
-        ...prevState.calendar,
-        type: newType,
-      },
-    }));
-  }
+  // function handleTypeToggle() {
+  //   const newType = state.calendar.type === "shows" ? "movies" : "shows";
+  //   setItems([]);
+  //   setState((prevState) => ({
+  //     ...prevState,
+  //     calendar: {
+  //       ...prevState.calendar,
+  //       type: newType,
+  //     },
+  //   }));
+  // }
 
-  function handleTypeChange(el: HTMLElement) {
-    const newType = el.getAttribute("data-type") as "shows" | "movies";
-    setItems([]);
-    setState((prevState) => ({
-      ...prevState,
-      calendar: {
-        ...prevState.calendar,
-        type: newType,
-      },
-    }));
-  }
+  // function handleTypeChange(el: HTMLElement) {
+  //   const newType = el.getAttribute("data-type") as "shows" | "movies";
+  //   setItems([]);
+  //   setState((prevState) => ({
+  //     ...prevState,
+  //     calendar: {
+  //       ...prevState.calendar,
+  //       type: newType,
+  //     },
+  //   }));
+  // }
 
   return (
     <div className="px-4 md:px-0">

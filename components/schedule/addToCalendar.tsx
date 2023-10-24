@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
+// eslint-disable-next-line no-undef
 export const AddToCalendar: React.FC = () => {
-  const { state, setState } = useContext(AppContext) as AppContextValue;
+  const { state } = useContext(AppContext) as AppContextValue;
 
   const [host, setHost] = useState("");
   const user = usePathname().split("/")[1];

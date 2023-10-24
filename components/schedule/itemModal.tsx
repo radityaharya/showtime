@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useEffect, useContext, useCallback } from "react";
 
 import { AppContext, type AppContextValue } from "../provider";
 import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
 
 interface Props {
+  // eslint-disable-next-line no-undef
   children: React.ReactNode;
 }
 
+// eslint-disable-next-line no-undef
 export const ItemModalProvider: React.FC<Props> = ({ children }) => {
   const { state, setState } = useContext(AppContext) as AppContextValue;
 

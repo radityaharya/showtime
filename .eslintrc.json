@@ -1,7 +1,16 @@
 {
   "extends": [
-    "next/core-web-vitals"
-    // "standard", // https://github.com/standard/eslint-config-standard#usage
-    // "plugin:prettier/recommended" // required by eslint-plugin-prettier, must be last; auto-configures prettier
-  ]
+    "next/core-web-vitals",
+    "standard", // https://github.com/standard/eslint-config-standard#usage
+    "plugin:prettier/recommended" // required by eslint-plugin-prettier, must be last; auto-configures prettier
+  ],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ],
+    "camelcase": "off"
+  }
 }

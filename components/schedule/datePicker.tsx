@@ -1,6 +1,7 @@
+/* eslint-disable no-undef */
 "use client";
 
-import { addDays, format } from "date-fns";
+import { addDays } from "date-fns";
 import { ArrowRight, Calendar as CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";

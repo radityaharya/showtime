@@ -28,7 +28,7 @@ export const AddToCalendar: React.FC = () => {
   ) {
     const calendarType = state.calendar.type;
     const webcal_url =
-      `${host}/api/${user}/calendar/${calendarType}/ical`.replace(
+      `${host}/api/user/${user}/calendar/${calendarType}/ical`.replace(
         /^https?:/,
         "webcal:",
       );

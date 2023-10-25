@@ -15,6 +15,7 @@ export const authOptions: NextAuthOptions = {
       VerificationTokens: `${collection_prefix}verificationTokens`,
     },
   }),
+  session: { strategy: "jwt" },
   providers: [
     TraktProvider({
       clientId: process.env.TRAKT_CLIENT_ID as string,

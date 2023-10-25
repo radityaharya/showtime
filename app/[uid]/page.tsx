@@ -16,7 +16,7 @@ type PageProps = {
   };
 };
 export default async function UserPage({ params: { uid } }: PageProps) {
-  const db = (await clientPromise).db("test");
+  const db = (await clientPromise).db(process.env.NEXTAUTH_DB);
   const collection = db.collection("nextauth_accounts");
   const session = await getServerSession(authOptions);
 
@@ -31,7 +31,7 @@ export default async function UserPage({ params: { uid } }: PageProps) {
   }
 
   if (user.name !== uid) {
-    return redirect(`/user/${user?.name}`);
+    return redirect("/auth");
   }
 
   const slug = user?.name as string;

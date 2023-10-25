@@ -1,4 +1,5 @@
 import { TraktAPI } from "@/lib/trakt/Trakt";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 export async function GET(
   request: Request,
@@ -9,12 +10,19 @@ export async function GET(
   },
 ) {
   try {
-    const days_ago = request.url.includes("days_ago")
+    const days_ago = request.url?.includes("days_ago")
       ? parseInt(request.url.split("days_ago=")[1].split("&")[0])
       : 1;
-    const period = request.url.includes("period")
+    const period = request.url?.includes("period")
       ? parseInt(request.url.split("period=")[1].split("&")[0])
-      : 5;
+      : 30;
+
+    const userAgent = headers().get("user-agent") || "";
+    if (/Mozilla|Chrome|Safari|Firefox|Edge/.test(userAgent)) {
+      throw new Error(
+        "Browser not supported for this route, use this link to Import the calendar",
+      );
+    }
 
     console.log(`days_ago: ${days_ago} | period: ${period}`);
     if (![days_ago, period].every(Number.isInteger)) {

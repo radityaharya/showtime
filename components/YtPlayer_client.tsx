@@ -20,7 +20,7 @@ export const YoutubePlayer: React.FC<Props> = ({
   const [clientSize, setClientSize] = useState({ width: 0, height: 0 });
   const [fallback, setFallback] = useState(true);
   const { toast } = useToast();
-
+  console.log(videoId);
   useEffect(() => {
     const handleResize = () => {
       setClientSize({
@@ -68,9 +68,14 @@ export const YoutubePlayer: React.FC<Props> = ({
   useEffect(() => {
     // after 2 seconds delay, show the video
     setTimeout(() => {
-      setFallback(false);
+      if (videoId) {
+        setFallback(false);
+      } else {
+        console.log("no video id");
+        setFallback(true);
+      }
     }, 2000);
-  }, []);
+  }, [videoId]);
 
   const onEnd = (event: any) => {
     event.target.playVideo();

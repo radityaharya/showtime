@@ -34,58 +34,6 @@ export interface MappedEpisode {
   }[];
 }
 
-type Image = {
-  aspect_ratio: number;
-  height: number;
-  iso_639_1: string | null;
-  file_path: string;
-  vote_average: number;
-  vote_count: number;
-  width: number;
-};
-
-type Episode = {
-  season: number;
-  number: number;
-  runtime: number;
-  overview: string;
-  title: string;
-  ids: {
-    trakt: number;
-    tvdb: number;
-    imdb: string | null;
-    tmdb: number;
-    tvrage: number | null;
-  };
-};
-
-type Show = {
-  title: string;
-  year: number;
-  ids: {
-    trakt: number;
-    slug: string;
-    tvdb: number;
-    imdb: string | null;
-    tmdb: number;
-    tvrage: number | null;
-  };
-  images: {
-    backdrops: Image[];
-    id: number;
-    logos: Image[];
-    posters: Image[];
-  };
-  details: any;
-  providers: any;
-};
-
-type AiredEpisode = {
-  first_aired: string;
-  episode: Episode;
-  show: Show;
-};
-
 export class ShowsUtil extends BaseUtil {
   async getShowsBatch(
     daysAgo?: number,
@@ -93,217 +41,216 @@ export class ShowsUtil extends BaseUtil {
     dateStart?: string,
     dateEnd?: string,
   ): Promise<MappedEpisode[]> {
-    // date format: YYYY-MM-DD
-    let startDate;
-    if (daysAgo && period) {
-      if (daysAgo > MAX_DAYS_AGO || period > MAX_PERIOD) {
+    try {
+      // date format: YYYY-MM-DD
+      const perfStart = performance.now();
+      let startDate;
+      if (daysAgo && period) {
+        if (daysAgo > MAX_DAYS_AGO || period > MAX_PERIOD) {
+          throw new Error(
+            `Invalid input: daysAgo must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`,
+          );
+        }
+        startDate = dayjs().subtract(daysAgo, "day");
+      } else if (dateStart && dateEnd) {
+        startDate = dayjs(dateStart);
+        period = dayjs(dateEnd).diff(startDate, "day");
+      } else if (period && daysAgo && dateStart && dateEnd) {
         throw new Error(
-          `days_ago must be less than ${MAX_DAYS_AGO} and period must be less than ${MAX_PERIOD}`,
+          "Invalid input: Either daysAgo and period or dateStart and dateEnd must be provided",
+        );
+      } else {
+        throw new Error(
+          "Invalid input: Either daysAgo and period or dateStart and dateEnd must be provided",
         );
       }
-      startDate = dayjs().subtract(daysAgo, "day");
-    } else if (dateStart && dateEnd) {
-      startDate = dayjs(dateStart);
-      period = dayjs(dateEnd).diff(startDate, "day");
-    } else if (period && daysAgo && dateStart && dateEnd) {
-      throw new Error(
-        "Either one of daysAgo and period or dateStart and dateEnd must be provided",
-      );
-    } else {
-      throw new Error(
-        "Either one of daysAgo and period or dateStart and dateEnd must be provided",
-      );
-    }
 
-    const tmdb = new TmdbAPI();
+      const tmdb = new TmdbAPI();
 
-    const userSlug = await this._request("/users/me", "GET");
-    const cacheKey = `shows_${userSlug.ids.slug}_${dayjs().format(
-      "YYYY-MM-DD-H",
-    )}_${daysAgo}_${period}`;
-    const cached_data = await this.redis_client.get(cacheKey);
+      const userSlug = await this._request("/users/me", "GET");
+      const cacheKey = `shows_${userSlug.ids.slug}_${dayjs().format(
+        "YYYY-MM-DD-H",
+      )}_${daysAgo}_${period}`;
+      const cachedData = await this.redis_client.get(cacheKey);
 
-    if (cached_data) {
-      console.log("returned cached show for", cacheKey);
-      return JSON.parse(cached_data);
-    }
+      if (cachedData && cachedData !== "undefined" && cachedData !== "null") {
+        console.log("returned cached show for", cacheKey);
+        return JSON.parse(cachedData);
+      }
 
-    const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
-      const response = await this._request(
-        "/calendars/my/shows",
-        "GET",
-        undefined,
-        undefined,
-        {
-          start_date: startDate.format("YYYY-MM-DD"),
-          days,
-          extended: "full",
-        },
-      );
+      const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
+        const response = await this._request(
+          "/calendars/my/shows",
+          "GET",
+          undefined,
+          undefined,
+          {
+            start_date: startDate.format("YYYY-MM-DD"),
+            days,
+            extended: "full",
+          },
+        );
 
-      let tmdbPromises: Promise<void>[] = [];
+        const tmdbPromises: Promise<void>[] = [];
 
-      if (Array.isArray(response)) {
-        tmdbPromises = response.map(
-          async (item: {
-            show: {
-              providers: any;
-              ids: any;
-              images: any;
-              details: any;
-            };
-          }) => {
-            const show_ids = item.show.ids;
-            if (show_ids.tmdb) {
-              const images = await tmdb.tv.getImages(show_ids.tmdb);
-              item.show.images = images;
-              const detail = await tmdb.tv.getDetails(show_ids.tmdb);
-              item.show.details = detail;
-              const providers = await tmdb.tv.getWatchProviders(show_ids.tmdb);
+        if (Array.isArray(response)) {
+          response.forEach((item) => {
+            const showIds = item.show.ids;
+            if (showIds.tmdb) {
+              tmdbPromises.push(
+                (async () => {
+                  const [images, detail, providers] = await Promise.all([
+                    tmdb.tv.getImages(showIds.tmdb),
+                    tmdb.tv.getDetails(showIds.tmdb),
+                    tmdb.tv.getWatchProviders(showIds.tmdb),
+                  ]);
 
-              const country = "ID";
-              let provider = null;
-              if (providers.results[country]) {
-                const countryProviders =
-                  providers.results[country].flatrate || [];
-                provider = countryProviders.reduce(
-                  (
-                    prev: { display_priority: number },
-                    current: { display_priority: number },
-                  ) => {
-                    return prev.display_priority < current.display_priority
-                      ? prev
-                      : current;
-                  },
-                );
-              } else {
-                if (providers.results.US) {
-                  const countryProviders = providers.results.US.flatrate || [];
-                  provider = countryProviders.reduce(
-                    (
-                      prev: { display_priority: number },
-                      current: { display_priority: number },
-                    ) => {
-                      return prev.display_priority < current.display_priority
-                        ? prev
-                        : current;
-                    },
-                  );
-                }
-              }
-              item.show.providers = provider;
+                  item.show.images = images;
+                  item.show.details = detail;
+
+                  const country = "ID";
+                  let provider = null;
+                  if (providers.results[country]) {
+                    const countryProviders =
+                      providers.results[country].flatrate || [];
+                    provider = countryProviders.reduce(
+                      (
+                        prev: { display_priority: number },
+                        current: { display_priority: number },
+                      ) => {
+                        return prev.display_priority < current.display_priority
+                          ? prev
+                          : current;
+                      },
+                    );
+                  } else {
+                    if (providers.results.US) {
+                      const countryProviders =
+                        providers.results.US.flatrate || [];
+                      provider = countryProviders.reduce(
+                        (
+                          prev: { display_priority: number },
+                          current: { display_priority: number },
+                        ) => {
+                          return prev.display_priority <
+                            current.display_priority
+                            ? prev
+                            : current;
+                        },
+                      );
+                    }
+                  }
+                  item.show.providers = provider;
+                })(),
+              );
             }
-          },
-        );
-      }
-
-      await Promise.all(tmdbPromises);
-      return response;
-    };
-
-    const batchSize = 20;
-    const numBatches = Math.ceil(period / batchSize);
-    const showsQueue = [];
-
-    for (let i = 0; i < numBatches; i++) {
-      showsQueue.push(
-        getEpisodes(
-          startDate.add(i * batchSize, "day"),
-          Math.min(batchSize, period - i * batchSize),
-        ),
-      );
-    }
-
-    const responses = (await Promise.all(showsQueue)) as AiredEpisode[][];
-    const entries = responses.flat();
-
-    const groupedOutput = new Map<string, MappedEpisode>();
-    for (const item of entries) {
-      try {
-        const date = dayjs(item.first_aired).utc();
-        const dateStr = date.format("ddd, DD MMM YYYY");
-        const dateUnix = date.unix();
-        const key = dateStr;
-
-        const mappedEpisode = {
-          show: item.show?.title || "",
-          season: item.episode.season,
-          number: item.episode.number,
-          title: item.episode.title,
-          overview: item.episode.overview || "",
-          network: item.show.details?.networks?.[0]?.name || "",
-          networkLogo: `https://image.tmdb.org/t/p${item.show.details?.networks?.[0]?.logo_path}`,
-          runtime: 30,
-          background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
-          logo: `https://image.tmdb.org/t/p/w500${item.show.images?.logos?.[0]?.file_path}`,
-          airsAt: date.format(),
-          airsAtUnix: dateUnix,
-          ids: item.show.ids,
-          providers: {
-            display_priority: item.show.providers?.display_priority,
-            logo_path: `https://image.tmdb.org/t/p${item.show.providers?.logo_path}`,
-            provider_id: item.show.providers?.provider_id,
-            provider_name: item.show.providers?.provider_name,
-          },
-        };
-
-        if (groupedOutput.has(key)) {
-          groupedOutput.get(key)!.items.push(mappedEpisode);
-        } else {
-          groupedOutput.set(key, {
-            dateStr,
-            dateUnix,
-            items: [mappedEpisode],
           });
         }
-      } catch (error) {
-        console.error(error);
-        console.error(item);
+
+        await Promise.allSettled(tmdbPromises);
+        return response;
+      };
+
+      const batchSize = 20;
+      const numBatches = Math.ceil(period / batchSize);
+      const showsQueue = [];
+
+      for (let i = 0; i < numBatches; i++) {
+        showsQueue.push(
+          getEpisodes(
+            startDate.add(i * batchSize, "day"),
+            Math.min(batchSize, period - i * batchSize),
+          ),
+        );
       }
-    }
 
-    const data = Array.from(groupedOutput.values());
-    const calendarStore = await Collection("calendar_store_shows");
-    const promises = [];
+      const responses = await Promise.all(showsQueue);
 
-    for (const item of data) {
-      promises.push(
-        calendarStore.updateOne(
-          {
-            slug: userSlug.ids.slug,
-            date: dayjs(
-              item.dateUnix * 1000 - (item.dateUnix % 86400) * 1000,
-            ).toDate(),
-          },
-          {
-            $set: {
-              slug: userSlug.ids.slug,
-              date: dayjs(
-                item.dateUnix * 1000 - (item.dateUnix % 86400) * 1000,
-              ).toDate(),
-              items: item.items,
-              size: item.items.length,
-              updatedAt: new Date(),
+      const entries = responses.flat();
+
+      const groupedOutput = new Map<string, MappedEpisode>();
+      for (const item of entries) {
+        try {
+          const date = dayjs(item.first_aired).utc();
+          const dateStr = date.format("ddd, DD MMM YYYY");
+          const dateUnix = date.unix();
+          const key = dateStr;
+
+          const mappedEpisode = {
+            show: item.show?.title || "",
+            season: item.episode.season,
+            number: item.episode.number,
+            title: item.episode.title,
+            overview: item.episode.overview || "",
+            network: item.show.details?.networks?.[0]?.name || "",
+            networkLogo: `https://image.tmdb.org/t/p${item.show.details?.networks?.[0]?.logo_path}`,
+            runtime: 30,
+            background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
+            logo: `https://image.tmdb.org/t/p/w500${item.show.images?.logos?.[0]?.file_path}`,
+            airsAt: date.format(),
+            airsAtUnix: dateUnix,
+            ids: item.show.ids,
+            providers: {
+              display_priority: item.show.providers?.display_priority,
+              logo_path: `https://image.tmdb.org/t/p${item.show.providers?.logo_path}`,
+              provider_id: item.show.providers?.provider_id,
+              provider_name: item.show.providers?.provider_name,
             },
+          };
+
+          const group = groupedOutput.get(key);
+          if (group) {
+            group.items.push(mappedEpisode);
+          } else {
+            groupedOutput.set(key, {
+              dateStr,
+              dateUnix,
+              items: [mappedEpisode],
+            });
+          }
+        } catch (error) {
+          console.error("Error processing TV show data:", error);
+          console.error("Problematic item:", item);
+          throw new Error("Error processing TV show data");
+        }
+      }
+
+      const data = Array.from(groupedOutput.values());
+      const calendarStore = await Collection("calendar_store_shows");
+      const bulkOps = data.map((item) => {
+        const date = dayjs(
+          item.dateUnix * 1000 - (item.dateUnix % 86400) * 1000,
+        ).toDate();
+        const filter = { slug: userSlug.ids.slug, date };
+        const update = {
+          $set: {
+            slug: userSlug.ids.slug,
+            date,
+            items: item.items,
+            size: item.items.length,
+            updatedAt: Date.now(),
           },
-          { upsert: true },
-        ),
-      );
+        };
+        return { updateOne: { filter, update, upsert: true } };
+      });
+      await calendarStore.bulkWrite(bulkOps, { ordered: false });
+
+      await this.redis_client.set(cacheKey, JSON.stringify(data), "EX", 60);
+      const perfEnd = performance.now();
+      console.log(`getShowsBatch(new) took ${perfEnd - perfStart}ms`);
+      return data;
+    } catch (error) {
+      console.error("Error retrieving TV show data:", error);
+      throw new Error("Error retrieving TV show data");
     }
-
-    await Promise.all(promises);
-
-    await this.redis_client.set(cacheKey, JSON.stringify(data), "EX", 60);
-    return data;
   }
 
   async getShowsCalendar(days_ago = 30, period = 90) {
     const episodes = await this.getShowsBatch(days_ago, period);
 
-    const flattenedEpisodes = [];
-    for (const episode of episodes) {
-      flattenedEpisodes.push(...episode.items);
-    }
+    const flattenedEpisodes = episodes
+      .flatMap(({ items }) => items)
+      .filter(({ runtime }) => runtime !== null && runtime !== 0);
 
     const user = await this._request("/users/me", "GET");
 
@@ -317,45 +264,66 @@ export class ShowsUtil extends BaseUtil {
         },
       })
       .toArray();
-    for (const episode of pastEpisodes) {
-      flattenedEpisodes.push(...episode.items);
-    }
+    const pastFlattenedEpisodes = pastEpisodes.flatMap(({ items }) => items);
 
     const cal = ical({ name: "Trakt.tv Shows Calendar" });
     const tmdb = new TmdbAPI();
-    const promises = [];
-    for (const episode of flattenedEpisodes) {
-      if (episode.runtime === null || episode.runtime === 0) {
-        episode.runtime = 30;
-      }
-      const show_ids = episode.ids;
-      let show_detail_promise;
-      if (show_ids.tmdb) {
-        show_detail_promise = tmdb.tv.getDetails(show_ids.tmdb);
-      } else {
-        show_detail_promise = Promise.resolve(null);
-      }
-      promises.push(
-        show_detail_promise.then((show_detail) => {
-          const summary = `${episode.show} - S${episode.season
-            .toString()
-            .padStart(2, "0")}E${episode.number.toString().padStart(2, "0")}`;
+    const showDetailsCache = new Map();
+    const promises = flattenedEpisodes.map(
+      async ({
+        ids,
+        runtime,
+        show,
+        season,
+        number,
+        title,
+        overview,
+        airsAtUnix,
+        network,
+      }) => {
+        let show_detail_promise;
+        if (ids.tmdb) {
+          if (showDetailsCache.has(ids.tmdb)) {
+            show_detail_promise = Promise.resolve(
+              showDetailsCache.get(ids.tmdb),
+            );
+          } else {
+            show_detail_promise = tmdb.tv.getDetails(ids.tmdb);
+            showDetailsCache.set(ids.tmdb, show_detail_promise);
+          }
+        } else {
+          show_detail_promise = Promise.resolve(null);
+        }
+        const show_detail = await show_detail_promise;
+        const summary = `${show} - S${season
+          .toString()
+          .padStart(2, "0")}E${number.toString().padStart(2, "0")}`;
 
-          const description = episode.overview
-            ? `${episode.title}\n${episode.overview}`
-            : episode.title;
-          cal.createEvent({
-            start: new Date(episode.airsAtUnix * 1000),
-            summary,
-            description,
-            location: show_detail
-              ? show_detail.networks[0].name
-              : episode.network,
-          });
-        }),
-      );
-    }
-    await Promise.all(promises);
+        const description = overview ? `${title}\n${overview}` : title;
+        cal.createEvent({
+          start: new Date(airsAtUnix * 1000),
+          summary,
+          description,
+          location: show_detail ? show_detail.networks[0].name : network,
+        });
+      },
+    );
+    await Promise.allSettled(promises);
+    pastFlattenedEpisodes.forEach(
+      ({ show, season, number, title, overview, airsAtUnix, network }) => {
+        const summary = `${show} - S${season
+          .toString()
+          .padStart(2, "0")}E${number.toString().padStart(2, "0")}`;
+
+        const description = overview ? `${title}\n${overview}` : title;
+        cal.createEvent({
+          start: new Date(airsAtUnix * 1000),
+          summary,
+          description,
+          location: network,
+        });
+      },
+    );
     return cal;
   }
 }

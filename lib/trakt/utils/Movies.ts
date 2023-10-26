@@ -200,7 +200,7 @@ export class MoviesUtil extends BaseUtil {
     const user = await this._request("/users/me", "GET");
 
     // TODO: Optional extended as a user config
-    const calendarStore = await Collection("calendar_store_shows");
+    const calendarStore = await Collection("calendar_store_movies");
     const pastEpisodes = await calendarStore
       .find({
         slug: user.ids.slug,

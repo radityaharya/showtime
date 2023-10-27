@@ -1,6 +1,8 @@
+
 # Showtime
 
 Get upcoming schedules from Trakt. Integrate it with your Calendar of choice!
+
 
 ## Self Hosting
 
@@ -35,15 +37,12 @@ cd <project_directory>
 ```bash
 bun install
 ```
-
 ```bash
 npm install
 ```
-
 ```bash
 pnpm install
 ```
-
 4. Create a `.env.local` file in the root of the project and add the necessary environment variables. Refer to the provided table in the README for a list of required variables.
 
 ### Start the Application
@@ -67,11 +66,9 @@ redis-server
 ```bash
 bun run dev
 ```
-
 ```bash
 npm run dev
 ```
-
 4. The application will be running locally at `http://localhost:3000`. Open a web browser and navigate to this URL to access the application.
 
 5. to build the application, run:
@@ -79,7 +76,6 @@ npm run dev
 ```bash
 bun run build
 ```
-
 ```bash
 npm run build
 ```
@@ -92,25 +88,25 @@ npm run build
 
 To run this project, you will need to add the following environment variables to your .env file
 
-| Environment Variable | Description                                                                                      |
-| -------------------- | ------------------------------------------------------------------------------------------------ | --- |
-| HOST                 | The host where the application is deployed.                                                      |
-| MONGO_URL            | The URL of the MongoDB instance or database used by the application.                             |
-| SECRET_KEY           | A secret key used for cryptographic operations, such as generating tokens and securing sessions. |
-| TRAKT_CLIENT_ID      | The client ID used for authenticating with the Trakt API.                                        |
-| TRAKT_CLIENT_SECRET  | The client secret used for authenticating with the Trakt API.                                    |     |
-| TRAKT_OAUTH_TOKEN    | An OAuth token required for authenticating with Trakt services.                                  |
-| TMDB_API_KEY         | The API key used for authenticating with The Movie Database (TMDb) API.                          |
-| TMDB_ACCESS_TOKEN    | An access token required for authenticating with TMDb services.                                  |
-| REDIS_URL            | The URL of the Redis server if it's used for caching or other purposes.                          |
-| PORT                 | The port on which the application will listen for incoming requests.                             |
-| NEXTAUTH_URL         | The URL at which the NextAuth.js authentication service is hosted.                               |
-| NEXTAUTH_SECRET      | A secret used by NextAuth.js for cryptographic operations.                                       |
-| IMGPROXY_URL         | The URL of the Imgproxy service, if used for image processing and manipulation.                  |
-| IMGPROXY_KEY         | A key required for authenticating with the Imgproxy service.                                     |
-| IMGPROXY_SALT        | A salt used for generating secure image URLs with Imgproxy.                                      |
-| SENTRY_AUTH_TOKEN    | An authentication token used for logging errors and exceptions with Sentry.                      |
-| NEXTAUTH_DB          | The database connection URL or configuration used by NextAuth.js for user authentication.        |
+| Environment Variable     | Description                                                                                                      |
+|-------------------------|------------------------------------------------------------------------------------------------------------------|
+| HOST                    | The host where the application is deployed.                                                                     |
+| MONGO_URL               | The URL of the MongoDB instance or database used by the application.                                             |
+| SECRET_KEY              | A secret key used for cryptographic operations, such as generating tokens and securing sessions.                |
+| TRAKT_CLIENT_ID         | The client ID used for authenticating with the Trakt API.                                                        |
+| TRAKT_CLIENT_SECRET     | The client secret used for authenticating with the Trakt API.                                                    |                                      |
+| TRAKT_OAUTH_TOKEN       | An OAuth token required for authenticating with Trakt services.                                                  |
+| TMDB_API_KEY            | The API key used for authenticating with The Movie Database (TMDb) API.                                          |
+| TMDB_ACCESS_TOKEN       | An access token required for authenticating with TMDb services.                                                  |
+| REDIS_URL               | The URL of the Redis server if it's used for caching or other purposes.                                          |
+| PORT                    | The port on which the application will listen for incoming requests.                                             |
+| NEXTAUTH_URL            | The URL at which the NextAuth.js authentication service is hosted.                                               |
+| NEXTAUTH_SECRET         | A secret used by NextAuth.js for cryptographic operations.                                                       |
+| IMGPROXY_URL            | The URL of the Imgproxy service, if used for image processing and manipulation.                                   |
+| IMGPROXY_KEY            | A key required for authenticating with the Imgproxy service.                                                      |
+| IMGPROXY_SALT           | A salt used for generating secure image URLs with Imgproxy.                                                        |
+| SENTRY_AUTH_TOKEN       | An authentication token used for logging errors and exceptions with Sentry.                                      |
+| NEXTAUTH_DB             | The database connection URL or configuration used by NextAuth.js for user authentication.                         |
 
 ## Disclaimer
 
@@ -123,7 +119,6 @@ This project uses the [Trakt API](https://trakt.docs.apiary.io/) to retrieve upc
 For any issues or concerns, please open an issue on GitHub or contact me on [contact@radityaharya.com](mailto:contact@radityaharya.com)
 
 Branding Attributions:
-
 <div style="display:flex;justify-content:space-between;">
   <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg" alt="TMDb Logo" width="200"/>
   <img src="https://static.radityaharya.com/trakt-wide-red-white.svg" alt="Trakt Logo" width="200"/>

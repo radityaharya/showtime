@@ -10,6 +10,8 @@ import { AddToCalendar } from "./addToCalendar";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Oval } from "react-loader-spinner";
+import { useAuthenticatedFetch } from "@/app/hooks/useAuthenticatedFetch";
+
 dayjs.extend(utc);
 
 interface Props {
@@ -22,16 +24,7 @@ type Items = ShowData[] | MovieData[];
 const ScheduleView: React.FC<Props> = ({ initItems }) => {
   const path = usePathname();
   const uid = path.split("/")[1];
-  const [nextAuthSessionToken, setNextAuthSessionToken] = useState("");
-
-  useEffect(() => {
-    const nextAuthSessionToken = document.cookie.split("; ").find((row) => {
-      return row.startsWith("__Secure-next-auth.session-token");
-    }) as string;
-    setNextAuthSessionToken(nextAuthSessionToken);
-  }, []);
-
-  console.log(nextAuthSessionToken);
+  const authenticatedFetch = useAuthenticatedFetch();
   const { state } = useContext(AppContext) as AppContextValue;
 
   const [Items, setItems] = useState(initItems as Items);
@@ -55,13 +48,10 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
       }
 
       // Fetch data if not found in local storage
-      fetch(url, {
+      authenticatedFetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: nextAuthSessionToken
-            ? nextAuthSessionToken.split("=")[1]
-            : "",
         },
       })
         .then((response) => response.json())

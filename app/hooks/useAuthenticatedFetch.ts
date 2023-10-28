@@ -1,17 +1,14 @@
-/* eslint-disable */
-// @ts-nocheck
-
+"use client";
 import { useState, useEffect } from "react";
 
 export function useAuthenticatedFetch() {
   const [nextAuthSessionToken, setNextAuthSessionToken] = useState("");
 
   useEffect(() => {
-    const nextAuthSessionToken = document.cookie
-      .split("; ")
-      .find((row) => {
-        return row.startsWith("__Secure-next-auth.session-token");
-      }) as string;
+    const nextAuthSessionToken = document.cookie.split("; ").find((row) => {
+      return row.startsWith("__Secure-next-auth.session-token");
+    }) as string;
+    console.log("nextAuthSessionToken:", nextAuthSessionToken);
     if (nextAuthSessionToken) {
       setNextAuthSessionToken(nextAuthSessionToken);
     } else {

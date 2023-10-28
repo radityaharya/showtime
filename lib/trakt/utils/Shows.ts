@@ -23,6 +23,13 @@ export interface MappedEpisode {
     airsAt: string;
     airsAtUnix: number;
     providers: any;
+    episodeIds: {
+      trakt: number | null;
+      tvdb: number | null;
+      imdb: string | null;
+      tmdb: string | null;
+      tvrage: number | null;
+    };
     ids: {
       trakt: number | null;
       slug: string | null;
@@ -92,6 +99,7 @@ export class ShowsUtil extends BaseUtil {
         );
 
         const tmdbPromises: Promise<void>[] = [];
+        const traktPromises: Promise<void>[] = [];
 
         if (Array.isArray(response)) {
           response.forEach((item) => {
@@ -144,10 +152,35 @@ export class ShowsUtil extends BaseUtil {
                 })(),
               );
             }
+
+            if (item.episode.ids.trakt) {
+              // get watched status
+              // https://api.trakt.tv/sync/history/episodes/:id
+              traktPromises.push(
+                (async () => {
+                  const watched = await this._request(
+                    `/sync/history/episodes/${item.episode.ids.trakt}`,
+                    "GET",
+                    undefined,
+                    undefined,
+                    {
+                      extended: "full",
+                    },
+                  );
+
+                  if (Array.isArray(watched) && watched.length > 0) {
+                    item.episode.watched = watched[0].watched_at;
+                  } else {
+                    item.episode.watched = false;
+                  }
+                })(),
+              );
+            }
           });
         }
 
         await Promise.allSettled(tmdbPromises);
+        await Promise.allSettled(traktPromises);
         return response;
       };
 
@@ -190,12 +223,20 @@ export class ShowsUtil extends BaseUtil {
             airsAt: date.format(),
             airsAtUnix: dateUnix,
             ids: item.show.ids,
+            episodeIds: {
+              trakt: item.episode.ids.trakt,
+              tvdb: item.episode.ids.tvdb,
+              imdb: item.episode.ids.imdb,
+              tmdb: `/tv/${item.show.ids.tmdb}/season/${item.episode.season}/episode/${item.episode.number}`,
+              tvrage: item.episode.ids.tvrage,
+            },
             providers: {
               display_priority: item.show.providers?.display_priority,
               logo_path: `https://image.tmdb.org/t/p${item.show.providers?.logo_path}`,
               provider_id: item.show.providers?.provider_id,
               provider_name: item.show.providers?.provider_name,
             },
+            watched: item.episode.watched,
           };
 
           const group = groupedOutput.get(key);

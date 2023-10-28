@@ -2,6 +2,21 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import TraktProvider from "next-auth/providers/trakt";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "../../../../lib/mongo/mongoPromise";
+import { Users } from "@/lib/util/users";
+import type { Session } from "next-auth";
+
+export type customSession = Session & {
+  accessToken?: {
+    slug: string;
+    access_token: string;
+    refresh_token: string;
+    expires_at: number;
+    token_type: "Bearer";
+    scope: string;
+    expires_in: number;
+    created_at: number;
+  };
+};
 
 const collection_prefix = process.env.MONGO_COLLECTION_PREFIX || "nextauth_";
 export const authOptions: NextAuthOptions = {
@@ -30,10 +45,27 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       return `${baseUrl}/auth/success`;
     },
-    async session({ session, user, token }) {
-      return session;
+    async session({ session, user, token }): Promise<customSession> {
+      const sessionUser = session as customSession;
+      if (token.name) {
+        const accessToken = await new Users().getAccessToken(
+          token.name as string,
+        );
+        if (accessToken) {
+          sessionUser.accessToken = accessToken;
+        }
+      }
+      return sessionUser;
     },
     async jwt({ token, user, account, profile, isNewUser }) {
+      if (token.name) {
+        const accessToken = await new Users().getAccessToken(
+          token.name as string,
+        );
+        if (accessToken) {
+          token.accessToken = accessToken;
+        }
+      }
       return token;
     },
   },

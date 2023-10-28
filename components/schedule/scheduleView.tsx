@@ -58,10 +58,10 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
           setIsDataLoading(false);
 
           // Store data in local storage
-          localStorage.setItem(
-            url,
-            JSON.stringify({ data: data.data, date: Date.now() }),
-          );
+          // localStorage.setItem(
+          //   url,
+          //   JSON.stringify({ data: data.data, date: Date.now() }),
+          // );
         });
     }, 500),
   ).current;

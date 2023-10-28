@@ -31,21 +31,23 @@ const ScheduleItems: React.FC<Props> = ({ Shows }) => {
                   ? `${show.ids.tmdb}_s${show.season}e${show.number}`
                   : show.ids.tmdb
               }
-              itemLogo={
-                show.logo ? show.logo : "https://placehold.co/154.77x60"
-              }
-              itemBackdrop={
-                show.background
+              item={{
+                itemLogo: show.logo
+                  ? show.logo
+                  : "https://placehold.co/154.77x60",
+                itemBackdrop: show.background
                   ? show.background
-                  : "https://placehold.co/409x292"
-              }
-              airingAt={show.airsAtUnix as number}
-              pillInfo={show.network ? show.network : "N/A"}
-              title={show.title}
-              episodeNumber={show?.number?.toString() || "N/A"}
-              subtitle={show.show || "N/A"}
-              seasonNumber={show?.season?.toString() || "N/A"}
-              ids={show.ids}
+                  : "https://placehold.co/409x292",
+                airingAt: show.airsAtUnix as number,
+                pillInfo: show.network ? show.network : "N/A",
+                title: show.title,
+                episodeNumber: show?.number?.toString() || "N/A",
+                subtitle: show.show || "N/A",
+                seasonNumber: show?.season?.toString() || "N/A",
+                episodeIds: show.episodeIds,
+                ids: show.ids,
+                watched: show.watched,
+              }}
             />
           ))}
         </div>

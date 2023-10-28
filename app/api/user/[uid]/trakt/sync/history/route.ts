@@ -3,70 +3,6 @@ import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 import TraktAPI from "@/lib/trakt/Trakt";
-import { z } from "zod";
-
-const schema = z.object({
-  movies: z.array(
-    z.object({
-      watched_at: z.string().optional(),
-      title: z.string().optional(),
-      year: z.number().optional(),
-      ids: z.object({
-        trakt: z.number().optional(),
-        slug: z.string().optional(),
-        imdb: z.string().optional(),
-        tmdb: z.number().optional(),
-      }),
-    }),
-  ),
-  shows: z.array(
-    z.object({
-      watched_at: z.string().optional(),
-      title: z.string().optional(),
-      year: z.number().optional(),
-      ids: z.object({
-        trakt: z.number().optional(),
-        slug: z.string().optional(),
-        tvdb: z.number().optional(),
-        imdb: z.string().optional(),
-        tmdb: z.number().optional(),
-      }),
-      seasons: z.array(
-        z.object({
-          watched_at: z.string().optional(),
-          number: z.number(),
-          episodes: z.array(
-            z.object({
-              watched_at: z.string().optional(),
-              number: z.number(),
-            }),
-          ),
-        }),
-      ),
-    }),
-  ),
-  seasons: z.array(
-    z.object({
-      watched_at: z.string().optional(),
-      ids: z.object({
-        trakt: z.number().optional(),
-        tvdb: z.number().optional(),
-        tmdb: z.number().optional(),
-      }),
-    }),
-  ),
-  episodes: z.array(
-    z.object({
-      watched_at: z.string().optional(),
-      ids: z.object({
-        trakt: z.number().optional(),
-        tvdb: z.number().optional(),
-        imdb: z.string().optional(),
-        tmdb: z.number().optional(),
-      }),
-    }),
-  ),
-});
 
 const secret = process.env.NEXTAUTH_SECRET;
 export async function POST(
@@ -97,7 +33,7 @@ export async function POST(
   const body = await request.json();
 
   try {
-    const data = schema.parse(body);
+    const data = body;
 
     const response = await trakt._request("/sync/history", "POST", data);
 
@@ -108,7 +44,7 @@ export async function POST(
       {
         error: "Invalid request body",
         status: "error",
-        notes: error,
+        notes: JSON.stringify(error, null, 2),
       },
       { status: 500 },
     );

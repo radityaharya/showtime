@@ -220,8 +220,6 @@ export class MoviesUtil extends BaseUtil {
       if (entry.runtime === null || entry.runtime === 0) {
         entry.runtime = 120;
       }
-      console.log(entry ? entry.ids : "no movie");
-
       const summary = `${entry.title}`;
 
       const description = entry.overview

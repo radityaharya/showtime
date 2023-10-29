@@ -50,8 +50,8 @@ const PreviewItemContent: FC<PreviewItemType> = ({ item, onClick }) => {
   const formattedAiringAt = format(new Date(item.airingAt), "h:mma");
 
   return (
-    <div className="group w-full rounded-lg text-floralwhite-100 font-text-sm-font-normal border-[2px] border-solid hover:cursor-pointer border-transparent hover:border-floralwhite-100/30 transition-colors duration-300 ease-in-out">
-      <div onClick={onClick} className="flex flex-col w-full h-[300px]">
+    <div className="group w-full h-[300px] rounded-lg text-floralwhite-100 font-text-sm-font-normal border-[2px] border-solid hover:cursor-pointer border-transparent hover:border-floralwhite-100/30 transition-colors duration-300 ease-in-out">
+      <div onClick={onClick} className="flex flex-col w-full">
         <div className="relative w-full max-h-[50%] aspect-[3/1] overflow-hidden rounded-lg group-hover:rounded-b-none transition-all duration-300 ease-in-out">
           <Image
             className="absolute object-cover z-[10] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
@@ -99,13 +99,13 @@ const PreviewItemContent: FC<PreviewItemType> = ({ item, onClick }) => {
               </div>
             </div>
           </div>
-          {item.episodeNumber && item.episodeNumber !== "N/A" ? (
-            <AddToHistory item={item} className="z-10" />
-          ) : (
-            ""
-          )}
         </div>
       </div>
+      {item.episodeNumber && item.episodeNumber !== "N/A" ? (
+        <AddToHistory item={item} className="z-10" />
+      ) : (
+        ""
+      )}
     </div>
   );
 };

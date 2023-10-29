@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import ScheduleView from "@/components/schedule/scheduleView";
 import TmdbAPI from "@/lib/tmdb/Tmdb";
 import clientPromise from "@/lib/mongo/mongoPromise";
+import { CountDownTimer } from "@/components/CountDownTimer";
 
 type PageProps = {
   params: {
@@ -110,8 +111,11 @@ function hero(itemData: ShowItem, videoId: string) {
       <div className="self-stretch h-full flex flex-col items-center justify-between z-10">
         <div className="self-stretch flex flex-row items-center justify-between">
           <div className="flex flex-col items-start justify-start gap-2">
-            <div className="relative font-medium text-gray-300">
-              Currently Airing
+            <div className="relative flex flex-row gap-2 font-medium text-gray-300">
+              Airing in
+              <span>
+                <CountDownTimer airsAt={itemData.airsAt} />
+              </span>
             </div>
             <div className="flex flex-col items-start justify-start gap-1 text-zinc-200">
               <h1 className="self-stretch relative text-4xl font-bold">
@@ -140,27 +144,6 @@ function hero(itemData: ShowItem, videoId: string) {
         </div>
         <div className="self-stretch flex flex-row items-end justify-between text-sm text-white">
           <div className="relative underline font-medium">Details</div>
-          {/* <div className="flex flex-row items-end justify-center gap-[24px] text-base text-gray-100">
-            <div className="flex-1 flex flex-col items-end justify-start">
-              <div className="relative font-semibold">Next Up</div>
-              <div className="flex flex-col items-end justify-start text-white">
-                <p className="font-bold">Loki</p>
-                <div className="relative text-md font-medium text-gray-100">
-                  {`S${itemData.number.toString().padStart(2, "0")}E${itemData.season.toString().padStart(2, "0")}: ${itemData.title}`}
-                </div>
-              </div>
-            </div>
-            <div className="relative h-[150.51px] w-[100px] rounded-md overflow-hidden bg-gray-100">
-              <Image
-                src="https://www.themoviedb.org/t/p/original/voHUmluYmKyleFkTu3lOXQG702u.jpg"
-                width={100}
-                height={150.51}
-                alt="next up poster"
-                className="rounded-md object-cover absolute z-[3]"
-              />
-              <Skeleton className="absolute h-[150.51px] w-[100px] z-1" />
-            </div>
-          </div> */}
         </div>
       </div>
     </div>

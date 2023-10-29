@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, FC } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -9,7 +9,7 @@ type Props = {
   item: ItemType;
 };
 
-export const AddToHistory: React.FC<Props> = ({ item, className }: Props) => {
+export const AddToHistory: FC<Props> = ({ item, className }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [watched, setWatched] = useState(item.watched || false);
   const { toast } = useToast();
@@ -90,7 +90,7 @@ export const AddToHistory: React.FC<Props> = ({ item, className }: Props) => {
   return (
     <button
       className={cn(
-        "w-full flex justify-center items-center text-white font-bold py-2 px-4 rounded hover:bg-white hover:text-black transition-all duration-300 ease-in-out",
+        "w-full flex justify-center items-center text-white font-bold py-3 px-4 rounded-lg rounded-t-none group-hover:rounded-t-lg hover:bg-white hover:text-black transition-all duration-300 ease-in-out bg-neutral-900",
         watched && "bg-white text-black",
         isLoading && "bg-gray cursor-not-allowed",
       )}

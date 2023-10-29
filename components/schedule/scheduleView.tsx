@@ -1,8 +1,9 @@
 "use client";
+
 import { MovieData, ShowData } from "../../app/types/schedule";
 import ScheduleItems from "@/components/schedule/scheduleCard";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useContext, useCallback, FC } from "react";
 import { AppContext, type AppContextValue } from "../provider";
 import { RangeDatePicker } from "./datePicker";
 import { TypeSwitcher } from "./typeSwitcher";
@@ -18,21 +19,16 @@ interface Props {
 
 type Items = ShowData[] | MovieData[];
 
-// eslint-disable-next-line no-undef
-const ScheduleView: React.FC<Props> = ({ initItems }) => {
+const ScheduleView: FC<Props> = ({ initItems }) => {
   const path = usePathname();
   const uid = path.split("/")[1];
   const { state } = useContext(AppContext) as AppContextValue;
 
   const [Items, setItems] = useState(initItems as Items);
-
-  // const [page, setPage] = useState(1);
-
-  // const [hasMore, setHasMore] = useState(true);
-
   const [isDataLoading, setIsDataLoading] = useState(true);
 
-  const debouncedFetch = useRef(
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedFetch = useCallback(
     debounce((url: string) => {
       setIsDataLoading(true);
 
@@ -44,7 +40,6 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
         return;
       }
 
-      // Fetch data if not found in local storage
       fetch(url, {
         method: "GET",
         headers: {
@@ -56,15 +51,10 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
           console.log(data);
           setItems(data.data as Items);
           setIsDataLoading(false);
-
-          // Store data in local storage
-          // localStorage.setItem(
-          //   url,
-          //   JSON.stringify({ data: data.data, date: Date.now() }),
-          // );
         });
     }, 500),
-  ).current;
+    [],
+  );
 
   useEffect(() => {
     debouncedFetch(
@@ -76,36 +66,12 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
     );
   }, [debouncedFetch, state.calendar.type, uid, state.calendar.dateRange]);
 
-  // function handleTypeToggle() {
-  //   const newType = state.calendar.type === "shows" ? "movies" : "shows";
-  //   setItems([]);
-  //   setState((prevState) => ({
-  //     ...prevState,
-  //     calendar: {
-  //       ...prevState.calendar,
-  //       type: newType,
-  //     },
-  //   }));
-  // }
-
-  // function handleTypeChange(el: HTMLElement) {
-  //   const newType = el.getAttribute("data-type") as "shows" | "movies";
-  //   setItems([]);
-  //   setState((prevState) => ({
-  //     ...prevState,
-  //     calendar: {
-  //       ...prevState.calendar,
-  //       type: newType,
-  //     },
-  //   }));
-  // }
-
   return (
     <div className="px-4 md:px-0">
       <div className="flex flex-row items-center gap-3 mb-8">
         <h2 className="text-4xl font-semibold ">Schedule</h2>
         <TypeSwitcher />
-        {isDataLoading ? (
+        {isDataLoading && (
           <Oval
             height={20}
             width={20}
@@ -118,8 +84,6 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
             strokeWidth={5}
             strokeWidthSecondary={5}
           />
-        ) : (
-          ""
         )}
       </div>
       <div className="flex flex-row gap-2 mb-8 flex-wrap">
@@ -129,7 +93,9 @@ const ScheduleView: React.FC<Props> = ({ initItems }) => {
       <main className="flex flex-col gap-4">
         {Items.length > 0 ? (
           Items.map((item) => (
-            <ScheduleItems key={item.dateUnix} Shows={item} />
+            <div key={item.dateUnix}>
+              <ScheduleItems Shows={item} />
+            </div>
           ))
         ) : (
           <p className="text-white">Loading...</p>

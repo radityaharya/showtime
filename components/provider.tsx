@@ -43,7 +43,7 @@ const initialState: AppContextState = {
     type: "shows",
     dateRange: {
       from: dayjs().subtract(2, "day").toDate(),
-      to: dayjs().add(90, "day").toDate(),
+      to: dayjs().add(30, "day").toDate(),
     },
   },
   user: {

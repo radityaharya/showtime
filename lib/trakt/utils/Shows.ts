@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { TmdbAPI } from "@/lib/tmdb/Tmdb";
 import { Collection } from "@/lib/mongo/mongo";
+import { ImgProxy } from "@/lib/imgproxy/ImgProxy";
 
 dayjs.extend(utc);
 
@@ -208,7 +209,7 @@ export class ShowsUtil extends BaseUtil {
           const dateStr = date.format("ddd, DD MMM YYYY");
           const dateUnix = date.unix();
           const key = dateStr;
-
+          const imgproxy = new ImgProxy();
           const mappedEpisode = {
             show: item.show?.title || "",
             season: item.episode.season,
@@ -216,10 +217,22 @@ export class ShowsUtil extends BaseUtil {
             title: item.episode.title,
             overview: item.episode.overview || "",
             network: item.show.details?.networks?.[0]?.name || "",
-            networkLogo: `https://image.tmdb.org/t/p${item.show.details?.networks?.[0]?.logo_path}`,
+            // networkLogo: `https://image.tmdb.org/t/p${item.show.details?.networks?.[0]?.logo_path}`,
+            networkLogo: imgproxy.buildUrl(
+              `https://image.tmdb.org/t/p${item.show.details?.networks?.[0]?.logo_path}`,
+              80,
+            ),
             runtime: 30,
-            background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
-            logo: `https://image.tmdb.org/t/p/w500${item.show.images?.logos?.[0]?.file_path}`,
+            // background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
+            background: imgproxy.buildUrl(
+              `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
+              80,
+            ),
+            // logo: `https://image.tmdb.org/t/p/w500${item.show.images?.logos?.[0]?.file_path}`,
+            logo: imgproxy.buildUrl(
+              `https://image.tmdb.org/t/p/w500${item.show.images?.logos?.[0]?.file_path}`,
+              80,
+            ),
             airsAt: date.format(),
             airsAtUnix: dateUnix,
             ids: item.show.ids,

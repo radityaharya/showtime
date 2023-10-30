@@ -5,6 +5,7 @@ import { TraktAPI } from "@/lib/trakt/Trakt";
 import { NextResponse, NextRequest } from "next/server";
 import { headers } from "next/headers";
 import clientPromise from "@/lib/mongo/mongoPromise";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   request: NextRequest,
@@ -47,6 +48,11 @@ export async function GET(
     const cal = (
       await trakt.Movies.getMoviesCalendar(days_ago, period)
     ).toBlob();
+
+    Sentry.setContext("request", {
+      url: request.url,
+      searchParams: Object.fromEntries(request.nextUrl.searchParams),
+    });
     return new NextResponse(cal, {
       headers: {
         "Content-Type": "text/calendar",
@@ -57,6 +63,10 @@ export async function GET(
     });
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
+    Sentry.setContext("request", {
+      url: request.url,
+      searchParams: Object.fromEntries(request.nextUrl.searchParams),
+    });
     return NextResponse.json({
       error: error instanceof Error ? error.message : error,
       status: "error",

@@ -42,29 +42,19 @@ export default async function UserPage({ params: { uid } }: PageProps) {
   });
 
   if (!nextauthAccount) {
-    return notFound();
+    return redirect("/auth");
   }
 
-  const accessToken = {
-    slug,
-    access_token: nextauthAccount?.access_token,
-    refresh_token: nextauthAccount?.refresh_token,
-    // expires_at: nextauthAccount?.expires_at,
-    expires_in:
-      (nextauthAccount?.expires_at as number) - Math.floor(Date.now() / 1000),
-    token_type: nextauthAccount?.token_type,
-    scope: nextauthAccount?.scope,
-    created_at: nextauthAccount?.created_at,
-  };
-
-  const trakt = new TraktAPI(accessToken);
+  const trakt = new TraktAPI(undefined, slug);
   const shows = (await trakt.Shows.getShowsBatch(2, 10)) as any;
   const tmdb = new TmdbAPI();
 
-  const now = new Date().getTime() / 1000;
-  const first = shows.find((show: any) => show.dateUnix > now) || shows[0];
-  const firstShow =
-    first.items.find((item: any) => item.dateUnix > now) || first.items[0];
+  const now = Date.now() / 1000;
+  const sortedShows = shows.sort((a: any, b: any) => a.dateUnix - b.dateUnix);
+  const nextShow = sortedShows.find(
+    ({ dateUnix }: { dateUnix: number }) => dateUnix >= now,
+  );
+  const firstShow = nextShow?.items[0] || [];
 
   const video = await tmdb.tv.getTvVideos(firstShow.ids.tmdb);
   const episodeVideo = await tmdb.tv.getEpisodeVideos(

@@ -4,12 +4,14 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import type { ItemType } from "./previewItem";
 import { usePathname } from "next/navigation";
+import { useSWRConfig } from "swr";
 type Props = {
   className?: string;
   item: ItemType;
 };
 
 export const AddToHistory: FC<Props> = ({ item, className }: Props) => {
+  const { mutate } = useSWRConfig();
   const [isLoading, setIsLoading] = useState(false);
   const [watched, setWatched] = useState(item.watched || false);
   const { toast } = useToast();
@@ -21,7 +23,6 @@ export const AddToHistory: FC<Props> = ({ item, className }: Props) => {
     setIsLoading(true);
 
     if (action === "add") {
-      // Add the item to history
       const body = {
         movies: [],
         episodes: [
@@ -38,6 +39,10 @@ export const AddToHistory: FC<Props> = ({ item, className }: Props) => {
         body: JSON.stringify(body),
       });
       const data = await response.json();
+      if (response.ok) {
+        setWatched(true);
+        console.log("watched", watched);
+      }
       console.log(data);
     } else {
       const body = {
@@ -58,6 +63,10 @@ export const AddToHistory: FC<Props> = ({ item, className }: Props) => {
         },
       );
       const data = await response.json();
+      if (response.ok) {
+        setWatched(false);
+        console.log("watched", watched);
+      }
       console.log(data);
     }
 
@@ -75,8 +84,12 @@ export const AddToHistory: FC<Props> = ({ item, className }: Props) => {
           } your history`;
 
     setIsLoading(false);
-    setWatched(action === "add");
     toast({ title, description });
+    mutate(
+      (key) => typeof key === "string" && key.startsWith("/api/user"),
+      undefined,
+      { revalidate: true },
+    );
   }
 
   function clickHandler() {

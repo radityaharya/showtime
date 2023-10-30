@@ -3,7 +3,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getToken } from "next-auth/jwt";
-// const Redis = require("ioredis");
+import * as Sentry from "@sentry/nextjs";
+
 const secret = process.env.NEXTAUTH_SECRET;
 
 export async function GET(
@@ -37,10 +38,10 @@ export async function GET(
   try {
     const days_ago = request.nextUrl.searchParams.get("days_ago")
       ? parseInt(request.nextUrl.searchParams.get("days_ago")!)
-      : 30;
+      : undefined;
     const period = request.nextUrl.searchParams.get("period")
       ? parseInt(request.nextUrl.searchParams.get("period")!)
-      : 30;
+      : undefined;
     const dateStart = request.nextUrl.searchParams.get("dateStart")
       ? request.url.split("dateStart=")[1].split("&")[0]
       : undefined;
@@ -72,6 +73,15 @@ export async function GET(
       status: "success",
     };
 
+    Sentry.setUser({
+      username: params.uid,
+    });
+
+    Sentry.setContext("request", {
+      url: request.url,
+      searchParams: Object.fromEntries(request.nextUrl.searchParams),
+    });
+
     return NextResponse.json(body, {
       headers: {
         "Content-Type": "application/json",
@@ -80,6 +90,10 @@ export async function GET(
     });
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
+    Sentry.setContext("request", {
+      url: request.url,
+      searchParams: Object.fromEntries(request.nextUrl.searchParams),
+    });
     return NextResponse.json({
       error: error instanceof Error ? error.message : error,
       status: "error",

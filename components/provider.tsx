@@ -4,6 +4,7 @@ import { createContext, useState, Dispatch, SetStateAction } from "react";
 import dayjs from "dayjs";
 import { ItemModalProvider } from "./schedule/itemModal";
 import { Toaster } from "@/components/ui/toaster";
+import { SWRConfig } from "swr";
 
 type CalendarType = "shows" | "movies";
 
@@ -69,10 +70,12 @@ export const Providers: React.FC<AppProviderProps> = ({ children }) => {
   return (
     <SessionProvider>
       <AppContext.Provider value={{ state, setState }}>
-        <ItemModalProvider>
-          {children}
-          <Toaster />
-        </ItemModalProvider>
+        <SWRConfig value={{ provider: () => new Map() }}>
+          <ItemModalProvider>
+            {children}
+            <Toaster />
+          </ItemModalProvider>
+        </SWRConfig>
       </AppContext.Provider>
     </SessionProvider>
   );

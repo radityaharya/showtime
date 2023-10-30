@@ -11,11 +11,11 @@ export async function GET(
   },
 ) {
   try {
-    const days_ago = request.url?.includes("days_ago")
-      ? parseInt(request.url.split("days_ago=")[1].split("&")[0])
-      : 1;
-    const period = request.url?.includes("period")
-      ? parseInt(request.url.split("period=")[1].split("&")[0])
+    const days_ago = request.nextUrl.searchParams.get("days_ago")
+      ? parseInt(request.nextUrl.searchParams.get("days_ago")!)
+      : 30;
+    const period = request.nextUrl.searchParams.get("period")
+      ? parseInt(request.nextUrl.searchParams.get("period")!)
       : 30;
 
     const userAgent = headers().get("user-agent") || "";
@@ -26,8 +26,8 @@ export async function GET(
     }
 
     console.log(`days_ago: ${days_ago} | period: ${period}`);
-    if (![days_ago, period].every(Number.isInteger)) {
-      throw new Error("days_ago and period must be integers");
+    if (![days_ago, period].every(Number.isSafeInteger)) {
+      throw new Error("days_ago and period must be safe integers");
     }
 
     const trakt = new TraktAPI(undefined, params.uid);

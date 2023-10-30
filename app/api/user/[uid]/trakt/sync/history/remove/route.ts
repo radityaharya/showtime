@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 import TraktAPI from "@/lib/trakt/Trakt";
+import { revalidatePath } from "next/cache";
 
 const secret = process.env.NEXTAUTH_SECRET;
 export async function POST(
@@ -36,7 +37,8 @@ export async function POST(
     const data = body;
 
     const response = await trakt._request("/sync/history/remove", "POST", data);
-
+    revalidatePath(`/api/user/${params.uid}/calendar/shows`);
+    revalidatePath(`/api/user/${params.uid}/calendar/movies`);
     return NextResponse.json(response);
   } catch (error) {
     console.error(error);

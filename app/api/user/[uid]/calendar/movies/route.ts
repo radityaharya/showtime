@@ -26,19 +26,25 @@ export async function GET(
       token,
       req: request.url,
     });
-    return NextResponse.json({ error: "Unauthorized", status: "error" });
+    return NextResponse.json(
+      { error: "Unauthorized", status: "error" },
+      {
+        status: 401,
+      },
+    );
   }
+
   try {
-    const days_ago = request.url?.includes("days_ago")
-      ? parseInt(request.url.split("days_ago=")[1].split("&")[0])
-      : undefined;
-    const period = request.url?.includes("period")
-      ? parseInt(request.url.split("period=")[1].split("&")[0])
-      : undefined;
-    const dateStart = request.url?.includes("dateStart")
+    const days_ago = request.nextUrl.searchParams.get("days_ago")
+      ? parseInt(request.nextUrl.searchParams.get("days_ago")!)
+      : 30;
+    const period = request.nextUrl.searchParams.get("period")
+      ? parseInt(request.nextUrl.searchParams.get("period")!)
+      : 30;
+    const dateStart = request.nextUrl.searchParams.get("dateStart")
       ? request.url.split("dateStart=")[1].split("&")[0]
       : undefined;
-    const dateEnd = request.url?.includes("dateEnd")
+    const dateEnd = request.nextUrl.searchParams.get("dateEnd")
       ? request.url?.split("dateEnd=")[1].split("&")[0]
       : undefined;
 
@@ -49,7 +55,7 @@ export async function GET(
       )
     ) {
       throw new Error(
-        "Either days_ago and period or dateStart() and dateEnd must be present",
+        "Either days_ago and period or dateStart and dateEnd must be present",
       );
     }
 
@@ -65,8 +71,6 @@ export async function GET(
       type: "shows",
       status: "success",
     };
-
-    // await redis.set(key, JSON.stringify(body), "EX", 1200);
 
     return NextResponse.json(body, {
       headers: {

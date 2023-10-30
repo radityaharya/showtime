@@ -6,17 +6,22 @@ import { NextResponse, NextRequest } from "next/server";
 import { headers } from "next/headers";
 import clientPromise from "@/lib/mongo/mongoPromise";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  {
+    params,
+  }: {
+    params: { _: string };
+  },
+) {
   try {
-    const days_ago = request.url?.includes("days_ago")
-      ? parseInt(request.url.split("days_ago=")[1].split("&")[0])
+    const days_ago = request.nextUrl.searchParams.get("days_ago")
+      ? parseInt(request.nextUrl.searchParams.get("days_ago")!)
       : 30;
-    const period = request.url?.includes("period")
-      ? parseInt(request.url.split("period=")[1].split("&")[0])
+    const period = request.nextUrl.searchParams.get("period")
+      ? parseInt(request.nextUrl.searchParams.get("period")!)
       : 30;
-    const key = request.url?.includes("key")
-      ? request.url.split("key=")[1].split("&")[0]
-      : undefined;
+    const key = request.nextUrl.searchParams.get("key");
     const userAgent = headers().get("user-agent") || "";
     if (/Mozilla|Chrome|Safari|Firefox|Edge/.test(userAgent)) {
       throw new Error(
@@ -25,8 +30,8 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(`days_ago: ${days_ago} | period: ${period}`);
-    if (![days_ago, period].every(Number.isInteger)) {
-      throw new Error("days_ago and period must be integers");
+    if (![days_ago, period].every(Number.isSafeInteger)) {
+      throw new Error("days_ago and period must be safe integers");
     }
 
     const client = await clientPromise;

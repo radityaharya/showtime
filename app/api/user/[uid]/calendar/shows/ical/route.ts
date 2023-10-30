@@ -20,6 +20,7 @@ export async function GET(
       : 30;
 
     const userAgent = headers().get("user-agent") || "";
+    Sentry.setTag("user-agent", userAgent);
     if (/Mozilla|Chrome|Safari|Firefox|Edge/.test(userAgent)) {
       throw new Error(
         "Browser not supported for this route, use this link to Import the calendar",

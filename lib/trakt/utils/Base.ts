@@ -99,6 +99,14 @@ export class BaseUtil {
       body: body && typeof body !== "string" ? JSON.stringify(body) : body,
     });
 
+    const rateLimitHeader = response.headers.get("x-ratelimit");
+    if (rateLimitHeader) {
+      const rateLimit = JSON.parse(rateLimitHeader);
+      if (rateLimit.remaining < 10) {
+        throw new Error("Rate limit hit, please try again later");
+      }
+    }
+
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       const body = await response.json();
@@ -170,11 +178,10 @@ export class BaseUtil {
 
     const history = await collection.findOne({
       user_slug: this.user_slug,
-      ...definedIds,
+      ids: definedIds,
     });
 
     if (history) {
-      console.info("Found history in cache");
       return history.response;
     } else {
       const response = await this._request(`/sync/history/${type}`, "GET");
@@ -189,6 +196,55 @@ export class BaseUtil {
       });
       return response;
     }
+  }
+
+  async getHistoryBatch(
+    type: string,
+    ids: { trakt?: number; imdb?: string; tmdb?: number }[],
+  ) {
+    if (!this.user_slug) {
+      throw new Error("No user slug");
+    }
+    if (!ids.length) {
+      throw new Error("No valid ids");
+    }
+    if (!["movies", "shows", "seasons", "episodes"].includes(type)) {
+      throw new Error("Invalid type");
+    }
+    const client = await clientPromise;
+    const db = client.db("trakt_ical2");
+    const collection = db.collection("history");
+
+    const definedIds: { [key: string]: number | string | undefined }[] =
+      ids.map((id) =>
+        Object.entries(id).reduce(
+          (acc, [key, value]) => {
+            if (value !== undefined) {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as { [key: string]: number | string | undefined },
+        ),
+      );
+
+    const bulkOps = definedIds.map((id) => ({
+      updateOne: {
+        filter: { user_slug: this.user_slug, ids: id },
+        update: {
+          $set: { user_slug: this.user_slug, ids: id, updated_at: new Date() },
+        },
+        upsert: true,
+      },
+    }));
+
+    await collection.bulkWrite(bulkOps);
+
+    const allHistory = await collection
+      .find({ user_slug: this.user_slug, ids: { $in: definedIds } })
+      .toArray();
+
+    return allHistory.map((history) => history.response);
   }
 
   async postHistory(body: any) {

@@ -155,21 +155,13 @@ export class ShowsUtil extends BaseUtil {
             }
 
             if (item.episode.ids.trakt) {
-              // get watched status
               // https://api.trakt.tv/sync/history/episodes/:id
               traktPromises.push(
                 (async () => {
-                  const watched = await this._request(
-                    `/sync/history/episodes/${item.episode.ids.trakt}`,
-                    "GET",
-                    undefined,
-                    undefined,
-                    {
-                      extended: "full",
-                    },
-                  );
-
-                  if (Array.isArray(watched) && watched.length > 0) {
+                  const watched = (await this.getHistory("episodes", {
+                    trakt: item.episode.ids.trakt,
+                  })) as any;
+                  if (watched) {
                     item.episode.watched = watched[0].watched_at;
                   } else {
                     item.episode.watched = false;

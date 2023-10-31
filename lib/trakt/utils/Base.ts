@@ -1,5 +1,7 @@
 // import clientPromise from "@/lib/mongo/mongoPromise";
 import { Users } from "@/lib/util/users";
+import clientPromise from "@/lib/mongo/mongoPromise";
+
 const Redis = require("ioredis");
 export const MAX_DAYS_AGO = 360;
 export const MAX_PERIOD = 390;
@@ -21,7 +23,7 @@ export class BaseUtil {
   private redirect_uri: string;
   private accessToken?: AccessToken;
   public redis_client: typeof Redis;
-  private user_slug?: string;
+  public user_slug?: string;
   private api_url: string;
 
   constructor(
@@ -37,6 +39,15 @@ export class BaseUtil {
     this.redis_client = new Redis(process.env.REDIS_URL, {
       keepAlive: 5000,
     });
+    this.onInit();
+  }
+
+  onInit() {
+    if (!this.user_slug) {
+      this._request("/users/me", "GET").then((res) => {
+        this.user_slug = res.user.ids.slug;
+      });
+    }
   }
 
   async _request(
@@ -127,5 +138,119 @@ export class BaseUtil {
 
     const users = new Users();
     await users.refreshAccessToken(await slug, newAccessToken);
+  }
+
+  async getHistory(
+    type: string,
+    ids: { trakt?: number; imdb?: string; tmdb?: number },
+  ) {
+    if (!this.user_slug) {
+      throw new Error("No user slug");
+    }
+    if (!ids.trakt && !ids.imdb && !ids.tmdb) {
+      throw new Error("No valid ids");
+    }
+    if (!["movies", "shows", "seasons", "episodes"].includes(type)) {
+      throw new Error("Invalid type");
+    }
+    const client = await clientPromise;
+    const db = client.db("trakt_ical2");
+    const collection = db.collection("history");
+
+    const definedIds: { [key: string]: number | string | undefined } =
+      Object.entries(ids).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as { [key: string]: number | string | undefined },
+      );
+
+    const history = await collection.findOne({
+      user_slug: this.user_slug,
+      ...definedIds,
+    });
+
+    if (history) {
+      console.info("Found history in cache");
+      return history.response;
+    } else {
+      const response = await this._request(`/sync/history/${type}`, "GET");
+      await collection.insertOne({
+        user_slug: this.user_slug,
+        ids,
+        updated_at: new Date(),
+        response,
+        watched:
+          response.episodes?.some((ep: any) => ep.watched_at) ||
+          response.movies?.some((m: any) => m.watched_at),
+      });
+      return response;
+    }
+  }
+
+  async postHistory(body: any) {
+    const response = await this._request("/sync/history", "POST", body);
+    const client = await clientPromise;
+    const db = client.db("trakt_ical2");
+    const collection = db.collection("history");
+
+    await collection.updateOne(
+      {
+        user_slug: this.user_slug,
+        ids: body.ids,
+      },
+      {
+        $set: {
+          updated_at: new Date(),
+          response,
+          watched:
+            response.episodes?.some((ep: any) => ep.watched_at) ||
+            response.movies?.some((m: any) => m.watched_at),
+        },
+      },
+      { upsert: true },
+    );
+
+    // Fetch the updated document
+    const updatedHistory = await collection.findOne({
+      user_slug: this.user_slug,
+      ids: body.ids,
+    });
+
+    return updatedHistory;
+  }
+
+  async removeHistory(body: any) {
+    const response = await this._request("/sync/history/remove", "POST", body);
+    const client = await clientPromise;
+    const db = client.db("trakt_ical2");
+    const collection = db.collection("history");
+
+    await collection.updateOne(
+      {
+        user_slug: this.user_slug,
+        ids: body.ids,
+      },
+      {
+        $set: {
+          updated_at: new Date(),
+          response,
+          watched:
+            response.episodes?.some((ep: any) => ep.watched_at) ||
+            response.movies?.some((m: any) => m.watched_at),
+        },
+      },
+      { upsert: true },
+    );
+
+    const updatedHistory = await collection.findOne({
+      user_slug: this.user_slug,
+      ids: body.ids,
+    });
+
+    return updatedHistory;
   }
 }

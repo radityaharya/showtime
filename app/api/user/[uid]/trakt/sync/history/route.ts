@@ -35,10 +35,10 @@ export async function POST(
 
   try {
     const data = body;
-    const response = await trakt._request("/sync/history", "POST", data);
+    const response = await trakt.postHistory(data);
     revalidatePath(`/api/user/${params.uid}/calendar/shows`);
     revalidatePath(`/api/user/${params.uid}/calendar/movies`);
-    return NextResponse.json(response);
+    return NextResponse.json((response as any).response);
   } catch (error) {
     console.error(error);
     return NextResponse.json(

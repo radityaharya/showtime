@@ -35,8 +35,7 @@ export async function POST(
 
   try {
     const data = body;
-
-    const response = await trakt._request("/sync/history/remove", "POST", data);
+    const response = await trakt.removeHistory(data);
     revalidatePath(`/api/user/${params.uid}/calendar/shows`);
     revalidatePath(`/api/user/${params.uid}/calendar/movies`);
     return NextResponse.json(response);

@@ -184,16 +184,20 @@ export class BaseUtil {
     if (history) {
       return history.response;
     } else {
-      const response = await this._request(`/sync/history/${type}`, "GET");
-      await collection.insertOne({
-        user_slug: this.user_slug,
-        ids,
-        updated_at: new Date(),
-        response,
-        watched:
-          response.episodes?.some((ep: any) => ep.watched_at) ||
-          response.movies?.some((m: any) => m.watched_at),
-      });
+      const response = await this._request(
+        `/sync/history/${type}/${ids.trakt}`,
+        "GET",
+        undefined,
+      );
+      if (response.length > 0) {
+        await collection.insertOne({
+          user_slug: this.user_slug,
+          ids,
+          updated_at: new Date(),
+          response,
+          watched: response[0].watched_at,
+        });
+      }
       return response;
     }
   }

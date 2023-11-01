@@ -60,15 +60,42 @@ export async function GET(
 
     const trakt = new TraktAPI(undefined, params.uid);
 
+    const items = await trakt.Shows.getShowsBatch(
+      days_ago,
+      period,
+      dateStart,
+      dateEnd,
+    );
+
+    const { earliest_date, latest_date } = items.reduce(
+      (acc, cur) => ({
+        earliest_date:
+          cur.dateUnix < acc.earliest_date.dateUnix ? cur : acc.earliest_date,
+        latest_date:
+          cur.dateUnix > acc.latest_date.dateUnix ? cur : acc.latest_date,
+      }),
+      {
+        earliest_date: { dateUnix: Infinity },
+        latest_date: { dateUnix: -Infinity },
+      } as {
+        earliest_date: { dateUnix: number };
+        latest_date: { dateUnix: number };
+      },
+    );
+
+    const earliest_date_str = new Date(
+      earliest_date.dateUnix * 1000,
+    ).toUTCString();
+    const latest_date_str = new Date(latest_date.dateUnix * 1000).toUTCString();
+
     const body = {
-      data: await trakt.Shows.getShowsBatch(
-        days_ago,
-        period,
-        dateStart,
-        dateEnd,
-      ),
+      data: items,
       type: "shows",
       status: "success",
+      dataLength: items.length,
+      itemsCount: items.reduce((acc, cur) => acc + cur.items.length, 0),
+      earliestDate: earliest_date_str,
+      latestDate: latest_date_str,
     };
 
     Sentry.setUser({

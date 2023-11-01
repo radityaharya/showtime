@@ -17,7 +17,7 @@ export async function GET(
       : 30;
     const period = request.nextUrl.searchParams.get("period")
       ? parseInt(request.nextUrl.searchParams.get("period")!)
-      : 30;
+      : 90;
 
     const userAgent = headers().get("user-agent") || "";
     Sentry.setTag("user-agent", userAgent);

@@ -5,7 +5,6 @@ import utc from "dayjs/plugin/utc";
 import { TmdbAPI } from "@/lib/tmdb/Tmdb";
 import { Collection } from "@/lib/mongo/mongo";
 import { ImgProxy } from "@/lib/imgproxy/ImgProxy";
-
 dayjs.extend(utc);
 
 export interface MappedEpisode {
@@ -214,7 +213,7 @@ export class ShowsUtil extends BaseUtil {
               `https://image.tmdb.org/t/p${item.show.details?.networks?.[0]?.logo_path}`,
               80,
             ),
-            runtime: 30,
+            runtime: item.episode.runtime || 30,
             // background: `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
             background: imgproxy.buildUrl(
               `https://image.tmdb.org/t/p/w500${item.show.images?.backdrops?.[0]?.file_path}`,
@@ -293,7 +292,7 @@ export class ShowsUtil extends BaseUtil {
 
   async getShowsCalendar(days_ago = 30, period = 90) {
     const episodes = await this.getShowsBatch(days_ago, period);
-
+    console.log("episodes", episodes);
     const flattenedEpisodes = episodes
       .flatMap(({ items }) => items)
       .filter(({ runtime }) => runtime !== null && runtime !== 0);
@@ -307,6 +306,7 @@ export class ShowsUtil extends BaseUtil {
         slug: user.ids.slug,
         date: {
           $lte: dayjs().subtract(days_ago, "day").toDate(),
+          $gte: dayjs().subtract(240, "day").toDate(),
         },
       })
       .toArray();
@@ -348,6 +348,7 @@ export class ShowsUtil extends BaseUtil {
         const description = overview ? `${title}\n${overview}` : title;
         cal.createEvent({
           start: new Date(airsAtUnix * 1000),
+          end: new Date(airsAtUnix * 1000 + runtime * 60 * 1000),
           summary,
           description,
           location: show_detail ? show_detail.networks[0].name : network,

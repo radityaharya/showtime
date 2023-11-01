@@ -160,8 +160,12 @@ export class ShowsUtil extends BaseUtil {
                   const watched = (await this.getHistory("episodes", {
                     trakt: item.episode.ids.trakt,
                   })) as any;
-                  if (watched.length > 0) {
-                    item.episode.watched = watched[0].watched_at;
+                  if (watched) {
+                    if (watched.length >= 1) {
+                      item.episode.watched = watched[0].watched_at;
+                    } else {
+                      item.episode.watched = false;
+                    }
                   } else {
                     item.episode.watched = false;
                   }

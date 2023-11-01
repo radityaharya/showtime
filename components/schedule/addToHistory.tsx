@@ -24,7 +24,6 @@ export const AddToHistory: FC<Props> = ({ item, className }: Props) => {
 
     if (action === "add") {
       const body = {
-        movies: [],
         episodes: [
           {
             watched_at: new Date().toISOString(),
@@ -46,7 +45,6 @@ export const AddToHistory: FC<Props> = ({ item, className }: Props) => {
       console.log(data);
     } else {
       const body = {
-        movies: [],
         episodes: [
           {
             ids: {

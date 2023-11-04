@@ -173,23 +173,43 @@ export class BaseUtil {
       ids: definedIds,
     });
 
-    if (history) {
+    // return if cached history is less than 50 minutes old
+    if (
+      history &&
+      Array.isArray(history.response) &&
+      history.updated_at > Date.now() - 50 * 60 * 1000
+    ) {
       return history.response;
     } else {
+      if (
+        history &&
+        history.response.length === 0 &&
+        history.updated_at.getTime() > Date.now() - 10 * 60 * 1000
+      ) {
+        console.log(
+          "Returning cached history with length 0 and updated_at is not within 10 minutes",
+        );
+        return history.response;
+      }
+      console.log("Fetching history from trakt");
       const response = await this._request(
         `/sync/history/${type}/${ids.trakt}`,
         "GET",
         undefined,
       );
-      if (response.length > 0) {
-        await collection.insertOne({
-          user_slug: this.user_slug,
-          ids,
-          updated_at: new Date(),
-          response,
-          watched: response[0].watched_at,
-        });
-      }
+      await collection.updateOne(
+        { user_slug: this.user_slug, ids },
+        {
+          $set: {
+            updated_at: new Date(),
+            response,
+            watched:
+              response.episodes?.some((ep: any) => ep.watched_at) ||
+              response.movies?.some((m: any) => m.watched_at),
+          },
+        },
+        { upsert: true },
+      );
       return response;
     }
   }
@@ -245,8 +265,7 @@ export class BaseUtil {
 
   async postHistory(body: any) {
     const response = await this._request("/sync/history", "POST", body);
-    console.log("postHistory", response);
-
+    const type = Object.keys(body)[0];
     const client = await clientPromise;
     const db = client.db("trakt_ical2");
     const collection = db.collection("history");
@@ -254,7 +273,7 @@ export class BaseUtil {
     await collection.updateOne(
       {
         user_slug: this.user_slug,
-        ids: body.ids,
+        ids: body[type][0].ids,
       },
       {
         $set: {
@@ -268,33 +287,32 @@ export class BaseUtil {
       { upsert: true },
     );
 
-    // Fetch the updated document
     const updatedHistory = await collection.findOne({
       user_slug: this.user_slug,
-      ids: body.ids,
+      ids: body[type][0].ids,
     });
-
     return updatedHistory;
   }
 
   async removeHistory(body: any) {
     const response = await this._request("/sync/history/remove", "POST", body);
+    const type = Object.keys(body)[0];
     const client = await clientPromise;
     const db = client.db("trakt_ical2");
     const collection = db.collection("history");
-
+    if (response.deleted[type] === 0) {
+      throw new Error("Nothing deleted");
+    }
     await collection.updateOne(
       {
         user_slug: this.user_slug,
-        ids: body.ids,
+        ids: body[type][0].ids,
       },
       {
         $set: {
           updated_at: new Date(),
-          response,
-          watched:
-            response.episodes?.some((ep: any) => ep.watched_at) ||
-            response.movies?.some((m: any) => m.watched_at),
+          response: [],
+          watched: false,
         },
       },
       { upsert: true },
@@ -302,7 +320,7 @@ export class BaseUtil {
 
     const updatedHistory = await collection.findOne({
       user_slug: this.user_slug,
-      ids: body.ids,
+      ids: body[type][0].ids,
     });
 
     return updatedHistory;

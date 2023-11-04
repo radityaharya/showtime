@@ -78,12 +78,12 @@ export class ShowsUtil extends BaseUtil {
       const cacheKey = `shows_${userSlug.ids.slug}_${dayjs().format(
         "YYYY-MM-DD-H",
       )}_${daysAgo}_${period}`;
-      const cachedData = await this.redis_client.get(cacheKey);
+      // const cachedData = await this.redis_client.get(cacheKey);
 
-      if (cachedData && cachedData !== "undefined" && cachedData !== "null") {
-        console.log("returned cached show for", cacheKey);
-        return JSON.parse(cachedData);
-      }
+      // if (cachedData && cachedData !== "undefined" && cachedData !== "null") {
+      //   console.log("returned cached show for", cacheKey);
+      //   return JSON.parse(cachedData);
+      // }
 
       const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
         const response = await this._request(

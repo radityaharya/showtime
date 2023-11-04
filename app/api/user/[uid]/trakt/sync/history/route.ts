@@ -38,6 +38,7 @@ export async function POST(
     const response = await trakt.postHistory(data);
     revalidatePath(`/api/user/${params.uid}/calendar/shows`);
     revalidatePath(`/api/user/${params.uid}/calendar/movies`);
+    revalidatePath(`/${params.uid}`);
     return NextResponse.json((response as any).response);
   } catch (error) {
     console.error(error);

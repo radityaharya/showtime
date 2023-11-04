@@ -46,9 +46,10 @@ export async function GET(
     }
 
     const trakt = new TraktAPI(undefined, user.name);
-    const cal = (
-      await trakt.Movies.getMoviesCalendar(days_ago, period)
-    ).toBlob();
+    const cal = new Blob(
+      [(await trakt.Movies.getMoviesCalendar(days_ago, period)).toString()],
+      { type: "text/calendar" },
+    );
 
     Sentry.setContext("request", {
       url: request.url,

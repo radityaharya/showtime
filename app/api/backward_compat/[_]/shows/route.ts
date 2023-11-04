@@ -46,7 +46,10 @@ export async function GET(
     }
 
     const trakt = new TraktAPI(undefined, user.name);
-    const cal = (await trakt.Shows.getShowsCalendar(days_ago, period)).toBlob();
+    const cal = new Blob(
+      [(await trakt.Shows.getShowsCalendar(days_ago, period)).toString()],
+      { type: "text/calendar" },
+    );
 
     Sentry.setUser({
       username: user.name,

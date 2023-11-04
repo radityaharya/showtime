@@ -191,7 +191,7 @@ export class BaseUtil {
         );
         return history.response;
       }
-      console.log("Fetching history from trakt");
+      // console.log("Fetching history from trakt");
       const response = await this._request(
         `/sync/history/${type}/${ids.trakt}`,
         "GET",

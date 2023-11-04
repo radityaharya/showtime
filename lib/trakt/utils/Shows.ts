@@ -47,9 +47,10 @@ export class ShowsUtil extends BaseUtil {
     period?: number,
     dateStart?: string,
     dateEnd?: string,
+    emit_history?: Boolean,
   ): Promise<MappedEpisode[]> {
     try {
-      // date format: YYYY-MM-DD
+      emit_history = emit_history || false;
       const perfStart = performance.now();
       let startDate;
       if (daysAgo && period) {
@@ -85,7 +86,11 @@ export class ShowsUtil extends BaseUtil {
       //   return JSON.parse(cachedData);
       // }
 
-      const getEpisodes = async (startDate: dayjs.Dayjs, days: number) => {
+      const getEpisodes = async (
+        startDate: dayjs.Dayjs,
+        days: number,
+        emit_history?: Boolean,
+      ) => {
         const response = await this._request(
           "/calendars/my/shows",
           "GET",
@@ -153,24 +158,26 @@ export class ShowsUtil extends BaseUtil {
               );
             }
 
-            if (item.episode.ids.trakt) {
-              // https://api.trakt.tv/sync/history/episodes/:id
-              traktPromises.push(
-                (async () => {
-                  const watched = (await this.getHistory("episodes", {
-                    trakt: item.episode.ids.trakt,
-                  })) as any;
-                  if (watched) {
-                    if (watched.length >= 1) {
-                      item.episode.watched = watched[0].watched_at;
+            if (!emit_history) {
+              if (item.episode.ids.trakt) {
+                // https://api.trakt.tv/sync/history/episodes/:id
+                traktPromises.push(
+                  (async () => {
+                    const watched = (await this.getHistory("episodes", {
+                      trakt: item.episode.ids.trakt,
+                    })) as any;
+                    if (watched) {
+                      if (watched.length >= 1) {
+                        item.episode.watched = watched[0].watched_at;
+                      } else {
+                        item.episode.watched = false;
+                      }
                     } else {
                       item.episode.watched = false;
                     }
-                  } else {
-                    item.episode.watched = false;
-                  }
-                })(),
-              );
+                  })(),
+                );
+              }
             }
           });
         }
@@ -189,6 +196,7 @@ export class ShowsUtil extends BaseUtil {
           getEpisodes(
             startDate.add(i * batchSize, "day"),
             Math.min(batchSize, period - i * batchSize),
+            emit_history,
           ),
         );
       }
@@ -295,8 +303,14 @@ export class ShowsUtil extends BaseUtil {
   }
 
   async getShowsCalendar(days_ago = 30, period = 90) {
-    const episodes = await this.getShowsBatch(days_ago, period);
-    console.log("episodes", episodes);
+    const episodes = await this.getShowsBatch(
+      days_ago,
+      period,
+      undefined,
+      undefined,
+      true,
+    );
+    // console.log("episodes", episodes);
     const flattenedEpisodes = episodes
       .flatMap(({ items }) => items)
       .filter(({ runtime }) => runtime !== null && runtime !== 0);

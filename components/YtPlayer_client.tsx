@@ -16,7 +16,7 @@ export const YoutubePlayer: FC<Props> = memo(
     const [clientSize, setClientSize] = useState({ width: 0, height: 0 });
     const [fallback, setFallback] = useState(true);
     const { toast } = useToast();
-    console.log(videoId);
+    // console.log(videoId);
     useEffect(() => {
       const handleResize = () => {
         setClientSize({

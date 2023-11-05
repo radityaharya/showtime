@@ -187,7 +187,7 @@ export class ShowsUtil extends BaseUtil {
         return response;
       };
 
-      const batchSize = 20;
+      const batchSize = 32;
       const numBatches = Math.ceil(period / batchSize);
       const showsQueue = [];
 

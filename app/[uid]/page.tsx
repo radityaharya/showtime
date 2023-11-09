@@ -63,14 +63,21 @@ export default async function UserPage({ params: { uid } }: PageProps) {
     firstShow.number,
   );
 
-  const ytVideo = video.results.find(
-    (v: any) => v.site === "YouTube" && v.iso_3166_1 === "US",
-  );
-  const ytEpisodeVideo = episodeVideo.results.find(
-    (v: any) => v.site === "YouTube" && v.iso_3166_1 === "US",
-  );
+  let videoId = "";
 
-  const videoId = ytEpisodeVideo?.key || ytVideo?.key;
+  const sources = [video.results, episodeVideo.results];
+  const findVideo = (source: any) =>
+    Array.isArray(source)
+      ? source.find((v: any) => v.site === "YouTube" && v.iso_3166_1 === "US")
+      : undefined;
+
+  for (const source of sources) {
+    const ytVideo = findVideo(source);
+    if (ytVideo) {
+      videoId = ytVideo.key;
+      break;
+    }
+  }
 
   return (
     <div>

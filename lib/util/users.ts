@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import clientPromise from "../mongo/mongoPromise";
 
 const NEXTAUTH_DB = process.env.NEXTAUTH_DB;
@@ -6,21 +7,40 @@ const NEXTAUTH_USERS_COLLECTION = "nextauth_users";
 const NEXTAUTH_ACCOUNTS_COLLECTION = "nextauth_accounts";
 
 export class Users {
-  async getAccessToken(slug: string) {
+  async getAccessToken(slug: string, user_id?: string) {
     const db = (await clientPromise).db(NEXTAUTH_DB);
     const accounts = db.collection(NEXTAUTH_ACCOUNTS_COLLECTION);
 
-    const user = await accounts.findOne({
-      providerAccountId: slug,
-      provider: "trakt",
-    });
+    // const user = await accounts.findOne({
+    //   // providerAccountId: slug,
+    //   userId: new ObjectId(user_id),
+    //   provider: "trakt",
+    // });
 
-    if (!user) {
-      throw new Error("User not found");
+    // if slug is "" use user_id if it exists
+    let user;
+    if (!slug && user_id) {
+      user = await accounts.findOne({
+        userId: new ObjectId(user_id),
+        provider: "trakt",
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+    } else {
+      user = await accounts.findOne({
+        providerAccountId: slug,
+        provider: "trakt",
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
     }
 
     const token = {
-      slug,
+      slug: user.providerAccountId,
       access_token: user.access_token,
       refresh_token: user.refresh_token,
       expires_at: user.expires_at,

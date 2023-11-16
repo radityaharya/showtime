@@ -1,7 +1,7 @@
 import { TraktAPI } from "@/lib/trakt/Trakt";
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions, customSession } from "@/app/api/auth/[...nextauth]/route";
 import { getToken } from "next-auth/jwt";
 import * as Sentry from "@sentry/nextjs";
 
@@ -15,12 +15,16 @@ export async function GET(
     params: { uid: string };
   },
 ) {
-  const session = await getServerSession({ req: request, ...authOptions });
-  const token = await getToken({ req: request, secret });
+  const session = (await getServerSession({
+    req: request,
+    ...authOptions,
+  })) as customSession;
+  const token = (await getToken({ req: request, secret })) as any;
+
   if (
-    !session?.user ||
-    session.user.name !== params.uid ||
-    (token?.name && token.name !== params.uid)
+    !session?.accessToken ||
+    session.accessToken?.slug !== params.uid ||
+    (token?.accessToken?.slug && token.accessToken.slug !== params.uid)
   ) {
     console.error("Unauthorized", {
       req: request.url,

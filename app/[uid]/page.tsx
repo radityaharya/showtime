@@ -4,7 +4,7 @@ import TraktAPI from "../../lib/trakt/Trakt";
 import { ShowItem } from "../types/schedule";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions, customSession } from "@/app/api/auth/[...nextauth]/route";
 import { Suspense } from "react";
 import ScheduleView from "@/components/schedule/scheduleView";
 import TmdbAPI from "@/lib/tmdb/Tmdb";
@@ -19,33 +19,26 @@ type PageProps = {
 export default async function UserPage({ params: { uid } }: PageProps) {
   const db = (await clientPromise).db(process.env.NEXTAUTH_DB);
   const collection = db.collection("nextauth_accounts");
-  const session = await getServerSession(authOptions);
-
-  const user = session?.user;
+  const session = (await getServerSession(authOptions)) as customSession;
 
   if (!session) {
     return redirect("/auth");
   }
 
-  if (!user) {
-    return notFound();
-  }
-
-  if (user.name !== uid) {
+  if (session.accessToken?.slug !== uid) {
     return redirect("/auth");
   }
 
-  const slug = user?.name as string;
   const nextauthAccount = await collection.findOne({
-    providerAccountId: user?.name,
+    providerAccountId: session.accessToken?.slug,
     provider: "trakt",
   });
 
   if (!nextauthAccount) {
-    return redirect("/auth");
+    return notFound();
   }
 
-  const trakt = new TraktAPI(undefined, slug);
+  const trakt = new TraktAPI(undefined, session.accessToken?.slug);
   const shows = (await trakt.Shows.getShowsBatch(2, 10)) as any;
   const tmdb = new TmdbAPI();
 

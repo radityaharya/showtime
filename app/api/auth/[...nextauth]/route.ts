@@ -47,21 +47,33 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, user, token }): Promise<customSession> {
       const sessionUser = session as customSession;
-      if (token.name) {
-        const accessToken = await new Users().getAccessToken(
-          token.name as string,
-        );
-        if (accessToken) {
-          sessionUser.accessToken = accessToken;
-        }
-      }
+
+      const customToken = token as {
+        name: string;
+        email: string;
+        picture: string;
+        sub: string;
+        accessToken: {
+          slug: string;
+          access_token: string;
+          refresh_token: string;
+          expires_at: number;
+          token_type: "Bearer";
+          scope: string;
+          expires_in: number;
+          created_at: number;
+        };
+        iat: number;
+        exp: number;
+        jti: string;
+      };
+
+      sessionUser.accessToken = customToken.accessToken;
       return sessionUser;
     },
     async jwt({ token, user, account, profile, isNewUser }) {
-      if (token.name) {
-        const accessToken = await new Users().getAccessToken(
-          token.name as string,
-        );
+      if (token.sub) {
+        const accessToken = await new Users().getAccessToken("", token.sub);
         if (accessToken) {
           token.accessToken = accessToken;
         }

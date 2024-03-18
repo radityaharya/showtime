@@ -1,0 +1,68 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: showtime
+    ports:
+      - "3000:3000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+      
+      - MONGO_URL=mongodb://mongo:27017/showtime
+      
+      - REDIS_URL=redis://redis:6379
+
+      - NEXTAUTH_URL=http://localhost:3000 # Change this to your public url
+      - NEXTAUTH_DB=mongodb://mongo:27017/showtime
+      - NEXTAUTH_SECRET=561b17f96ccd0eafa720fa8d7e00a0ce30b72220e6bdb2c0d26e5dc04b97ea950d72c785f3188d25df7503c024dce2b72de27fdb51f7a853a4ba02dfeccbae2f
+
+      - IMGPROXY_URL=http://localhost:8080
+      - IMGPROXY_KEY=561b17f96ccd0eafa720fa8d7e00a0ce30b72220e6bdb2c0d26e5dc04b97ea950d72c785f3188d25df7503c024dce2b72de27fdb51f7a853a4ba02dfeccbae2f
+      - IMGPROXY_SALT=561b17f96ccd0eafa720fa8d7e00a0ce30b72220e6bdb2c0d26e5dc04b97ea950d72c785f3188d25df7503c024dce2b72de27fdb51f7a853a4ba02dfeccbae2f
+      - IMGPROXY_MAX_SRC_RESOLUTION=16.8
+      - IMGPROXY_TTL=31536000
+      - IMGPROXY_USE_ETAG=true
+
+      - TRAKT_CLIENT_ID=${TRAKT_CLIENT_ID}
+      - TRAKT_CLIENT_SECRET=${TRAKT_CLIENT_SECRET}
+
+      - TMDB_API_KEY=${TMDB_API_KEY}
+      - TMDB_ACCESS_TOKEN=${TMDB_ACCESS_TOKEN}
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - redis
+      - imgproxy
+
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  imgproxy:
+    image: darthsim/imgproxy
+    ports:
+      - "8080:8080"
+    environment:
+      - IMGPROXY_KEY=561b17f96ccd0eafa720fa8d7e00a0ce30b72220e6bdb2c0d26e5dc04b97ea950d72c785f3188d25df7503c024dce2b72de27fdb51f7a853a4ba02dfeccbae2f
+      - IMGPROXY_SALT=561b17f96ccd0eafa720fa8d7e00a0ce30b72220e6bdb2c0d26e5dc04b97ea950d72c785f3188d25df7503c024dce2b72de27fdb51f7a853a4ba02dfeccbae2f
+      - IMGPROXY_MAX_SRC_RESOLUTION=16.8
+      - IMGPROXY_TTL=31536000
+      - IMGPROXY_USE_ETAG=true
+
+volumes:
+  mongo_data:
+  redis_data:

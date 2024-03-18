@@ -88,26 +88,23 @@ npm run build
 
 To run this project, you will need to add the following environment variables to your .env file
 
-| Environment Variable     | Description                                                                                                      |
-|-------------------------|------------------------------------------------------------------------------------------------------------------|
-| HOST                    | The host where the application is deployed.                                                                     |
-| MONGO_URL               | The URL of the MongoDB instance or database used by the application.                                             |
-| SECRET_KEY              | A secret key used for cryptographic operations, such as generating tokens and securing sessions.                |
-| TRAKT_CLIENT_ID         | The client ID used for authenticating with the Trakt API.                                                        |
-| TRAKT_CLIENT_SECRET     | The client secret used for authenticating with the Trakt API.                                                    |                                      |
-| TRAKT_OAUTH_TOKEN       | An OAuth token required for authenticating with Trakt services.                                                  |
-| TMDB_API_KEY            | The API key used for authenticating with The Movie Database (TMDb) API.                                          |
-| TMDB_ACCESS_TOKEN       | An access token required for authenticating with TMDb services.                                                  |
-| REDIS_URL               | The URL of the Redis server if it's used for caching or other purposes.                                          |
-| PORT                    | The port on which the application will listen for incoming requests.                                             |
-| NEXTAUTH_URL            | The URL at which the NextAuth.js authentication service is hosted.                                               |
-| NEXTAUTH_SECRET         | A secret used by NextAuth.js for cryptographic operations.                                                       |
-| IMGPROXY_URL            | The URL of the Imgproxy service, if used for image processing and manipulation.                                   |
-| IMGPROXY_KEY            | A key required for authenticating with the Imgproxy service.                                                      |
-| IMGPROXY_SALT           | A salt used for generating secure image URLs with Imgproxy.                                                        |
-| SENTRY_AUTH_TOKEN       | An authentication token used for logging errors and exceptions with Sentry.                                      |
-| NEXTAUTH_DB             | The database connection URL or configuration used by NextAuth.js for user authentication.                         |
-
+| Environment Variable     | Description                                                                                                      | Example |
+|-------------------------|------------------------------------------------------------------------------------------------------------------|---------|
+| HOST                    | The host where the application is deployed.                                                                     | 0.0.0.0 |
+| PORT                    | The port on which the application will listen for incoming requests.                                             | 3000 |
+| TRAKT_CLIENT_ID         | The client ID used for authenticating with the Trakt API.                                                        | |
+| TRAKT_CLIENT_SECRET     | The client secret used for authenticating with the Trakt API.                                                    | |
+| MONGO_URL               | The URL of the MongoDB instance or database used by the application.                                             | mongodb://your-mongo-url:27017/your-db-name |
+| IMGPROXY_KEY            | A key required for authenticating with the Imgproxy service.                                                      | |
+| IMGPROXY_SALT           | A salt used for generating secure image URLs with Imgproxy.                                                        | |
+| IMGPROXY_URL            | The URL of the Imgproxy service, if used for image processing and manipulation.                                   | |
+| TMDB_API_KEY            | The API key used for authenticating with The Movie Database (TMDb) API.                                          | |
+| TMDB_ACCESS_TOKEN       | An access token required for authenticating with TMDb services.                                                  | |
+| REDIS_URL               | The URL of the Redis server if it's used for caching or other purposes.                                          | redis://your-redis-url:6379/0 |
+| NEXTAUTH_URL            | The URL at which the NextAuth.js authentication service is hosted.                                               | http://localhost:3000 |
+| NEXTAUTH_SECRET         | A secret used by NextAuth.js for cryptographic operations.                                                       | random-secret |
+| NEXTAUTH_DB             | The database connection URL or configuration used by NextAuth.js for user authentication.                         | |
+| SENTRY_AUTH_TOKEN       | An authentication token used for logging errors and exceptions with Sentry.                                      | |
 ## Disclaimer
 
 This project is not affiliated with Trakt. For the best experience and access to advanced features, it is recommended to subscribe to Trakt's VIP plan, which includes iCal integration.

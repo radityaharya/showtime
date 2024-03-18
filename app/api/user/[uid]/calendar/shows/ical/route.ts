@@ -42,7 +42,9 @@ export async function GET(
     const cachedResponse = await redis_client.get(cache_key);
     if (cachedResponse) {
       const ttl = await redis_client.ttl(cache_key);
-      console.info(`Cache used for request: ${request.url}. TTL: ${ttl} seconds`);
+      console.info(
+        `Cache used for request: ${request.url}. TTL: ${ttl} seconds`,
+      );
       const cal = new Blob([cachedResponse], { type: "text/calendar" });
       return new NextResponse(cal, {
         headers: {

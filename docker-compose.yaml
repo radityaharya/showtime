@@ -31,6 +31,8 @@ services:
 
       - TMDB_API_KEY=${TMDB_API_KEY}
       - TMDB_ACCESS_TOKEN=${TMDB_ACCESS_TOKEN}
+
+      - SENTRY_DSN=${SENTRY_DSN}
     env_file:
       - .env
     depends_on:

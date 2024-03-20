@@ -105,6 +105,7 @@ To run this project, you will need to add the following environment variables to
 | NEXTAUTH_SECRET         | A secret used by NextAuth.js for cryptographic operations.                                                       | random-secret |
 | NEXTAUTH_DB             | The database connection URL or configuration used by NextAuth.js for user authentication.                         | |
 | SENTRY_AUTH_TOKEN       | An authentication token used for logging errors and exceptions with Sentry.                                      | |
+| NEXT_PUBLIC_SENTRY_DSN  | The Data Source Name (DSN) used for logging errors and exceptions with Sentry.                                   | |
 ## Disclaimer
 
 This project is not affiliated with Trakt. For the best experience and access to advanced features, it is recommended to subscribe to Trakt's VIP plan, which includes iCal integration.

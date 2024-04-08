@@ -10,14 +10,6 @@ export class Users {
   async getAccessToken(slug: string, user_id?: string) {
     const db = (await clientPromise).db(NEXTAUTH_DB);
     const accounts = db.collection(NEXTAUTH_ACCOUNTS_COLLECTION);
-
-    // const user = await accounts.findOne({
-    //   // providerAccountId: slug,
-    //   userId: new ObjectId(user_id),
-    //   provider: "trakt",
-    // });
-
-    // if slug is "" use user_id if it exists
     let user;
     if (!slug && user_id) {
       user = await accounts.findOne({
@@ -56,7 +48,7 @@ export class Users {
     const db = (await clientPromise).db(NEXTAUTH_DB);
     const accounts = db.collection(NEXTAUTH_ACCOUNTS_COLLECTION);
 
-    const updated = accounts.updateOne(
+    const updated = await accounts.updateOne(
       { slug },
       {
         $set: {

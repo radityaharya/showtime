@@ -290,7 +290,12 @@ export class ShowsUtil extends BaseUtil {
         };
         return { updateOne: { filter, update, upsert: true } };
       });
-      await calendarStore.bulkWrite(bulkOps, { ordered: false });
+
+      if (bulkOps.length > 0) {
+        await calendarStore.bulkWrite(bulkOps, { ordered: false });
+      } else {
+        console.log("No operations to execute, skipping...");
+      }
 
       await this.redis_client.set(cacheKey, JSON.stringify(data), "EX", 60);
       const perfEnd = performance.now();

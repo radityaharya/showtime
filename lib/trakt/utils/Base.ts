@@ -12,6 +12,7 @@ export interface AccessToken {
     access_token: string;
     token_type: string;
     expires_in: number;
+    expires_at: number;
     refresh_token: string;
     scope: string;
     created_at: number;
@@ -57,84 +58,93 @@ export class BaseUtil {
     headers?: any,
     query?: any,
   ) {
-    const url = new URL(path, this.api_url);
-    if (query) {
-      const searchParams = new URLSearchParams(query);
-      url.search = searchParams.toString();
-    }
-
-    if (this.user_slug !== undefined && this.accessToken === undefined) {
-      const users = new Users();
-      const token = await users.getAccessToken(this.user_slug);
-      if (await this._isAccesTokenExpired(token)) {
-        console.info("Refreshing access token for", this.user_slug);
-        await this.refreshAccessToken(token);
+    try {
+      const url = new URL(path, this.api_url);
+      if (query) {
+        const searchParams = new URLSearchParams(query);
+        url.search = searchParams.toString();
       }
-      this.accessToken = token;
-    }
 
-    let oauth_token;
-
-    if (this.accessToken) {
-      if (await this._isAccesTokenExpired(this.accessToken)) {
-        console.info("Refreshing access token for", this.accessToken.slug);
-        await this.refreshAccessToken(this.accessToken);
+      if (this.user_slug !== undefined && this.accessToken === undefined) {
+        const users = new Users();
+        const token = await users.getAccessToken(this.user_slug);
+        if (await this._isAccessTokenExpired(token)) {
+          console.info("Refreshing access token for", this.user_slug);
+          await this.refreshAccessToken(token);
+        }
+        this.accessToken = token;
       }
-      oauth_token = this.accessToken.access_token;
-    }
 
-    if (headers && headers.Authorization) {
-      oauth_token = headers.Authorization.split(" ")[1];
-    }
+      let oauth_token = this.accessToken?.access_token;
 
-    const response = await fetch(url.toString(), {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        "trakt-api-key": this.client_id,
-        "trakt-api-version": "2",
-        ...(oauth_token ? { authorization: `Bearer ${oauth_token}` } : {}),
-        ...headers,
-      },
-      body: body && typeof body !== "string" ? JSON.stringify(body) : body,
-    });
+      if (headers && headers.Authorization) {
+        oauth_token = headers.Authorization.split(" ")[1];
+      }
 
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      const body = await response.json();
+      const requestOptions = {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "trakt-api-key": this.client_id,
+          "trakt-api-version": "2",
+          ...(oauth_token ? { Authorization: `Bearer ${oauth_token}` } : {}),
+          ...headers,
+        },
+        body: body && typeof body !== "string" ? JSON.stringify(body) : body,
+      };
 
-      if (response.ok) {
-        return body;
+      const response = await fetch(url.toString(), requestOptions);
+
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const responseBody = await response.json();
+        if (response.ok) {
+          return responseBody;
+        } else {
+          throw new Error(responseBody.message);
+        }
       } else {
-        throw new Error(body.message);
+        const responseBody = await response.text();
+        throw new Error(responseBody);
       }
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
-
-    return response.text(); // or handle non-JSON response
   }
 
-  async _isAccesTokenExpired(access_token: AccessToken) {
-    const { expires_in, created_at } = access_token.access_token;
-    const isTokenExpired = Date.now() / 1000 > created_at + expires_in;
+  async _isAccessTokenExpired(access_token: any) {
+    const { expires_at } = access_token;
+    const currentTime = Date.now() / 1000;
+    const isTokenExpired = currentTime > expires_at;
     return isTokenExpired;
   }
 
-  async refreshAccessToken(access_token: AccessToken) {
-    const newAccessToken = await this._request("/oauth/token", "POST", {
-      refresh_token: access_token.access_token.refresh_token,
-      client_id: this.client_id,
-      client_secret: this.client_secret,
-      redirect_uri: this.redirect_uri,
-      grant_type: "refresh_token",
+  async refreshAccessToken(access_token: any) {
+    const response = await fetch(`${this.api_url}/oauth/token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        refresh_token: access_token.refresh_token,
+        client_id: this.client_id,
+        client_secret: this.client_secret,
+        redirect_uri: this.redirect_uri,
+        grant_type: "refresh_token",
+      }),
     });
+
+    const newAccessToken = await response.json();
 
     if (newAccessToken && this.accessToken) {
       this.accessToken.access_token = newAccessToken;
     }
 
-    const slug = this._request("/users/me", "GET").then(
-      (res) => res.user.ids.slug,
-    );
+    const slug =
+      this.user_slug ||
+      this.accessToken?.slug ||
+      (await this._request("/users/me", "GET")).user.ids.slug;
 
     const users = new Users();
     await users.refreshAccessToken(await slug, newAccessToken);

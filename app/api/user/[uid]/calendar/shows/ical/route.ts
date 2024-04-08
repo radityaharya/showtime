@@ -1,5 +1,4 @@
 import { TraktAPI } from "@/lib/trakt/Trakt";
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 const Redis = require("ioredis");
@@ -19,14 +18,6 @@ export async function GET(
     const period = request.nextUrl.searchParams.get("period")
       ? parseInt(request.nextUrl.searchParams.get("period")!)
       : 90;
-
-    const userAgent = headers().get("user-agent") || "";
-    Sentry.setTag("user-agent", userAgent);
-    if (/Mozilla|Chrome|Safari|Firefox|Edge/.test(userAgent)) {
-      throw new Error(
-        "Browser not supported for this route, use this link to Import the calendar",
-      );
-    }
 
     console.log(`days_ago: ${days_ago} | period: ${period}`);
     if (![days_ago, period].every(Number.isSafeInteger)) {
@@ -55,7 +46,6 @@ export async function GET(
         },
       });
     }
-
     const trakt = new TraktAPI(undefined, params.uid);
     const calendarData = await trakt.Shows.getShowsCalendar(days_ago, period);
     const cal = new Blob([calendarData.toString()], { type: "text/calendar" });

@@ -104,6 +104,11 @@ const ScheduleView: FC<Props> = ({ initItems }) => {
               <ScheduleItems Shows={item} />
             </div>
           ))
+        ) : !isLoading && !isValidating ? (
+          <p className="text-white">
+            No upcoming items returned within time range. Make sure there are
+            entries in your trakt account.
+          </p>
         ) : (
           <p className="text-white">Loading...</p>
         )}

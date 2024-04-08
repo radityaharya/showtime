@@ -49,16 +49,24 @@ export default async function UserPage({ params: { uid } }: PageProps) {
   );
   const firstShow = nextShow?.items[0] || [];
 
-  const video = await tmdb.tv.getTvVideos(firstShow.ids.tmdb);
-  const episodeVideo = await tmdb.tv.getEpisodeVideos(
-    firstShow.ids.tmdb,
-    firstShow.season,
-    firstShow.number,
-  );
+  let video, episodeVideo;
+
+  if (firstShow && firstShow.ids) {
+    video = await tmdb.tv.getTvVideos(firstShow.ids.tmdb);
+    episodeVideo = await tmdb.tv.getEpisodeVideos(
+      firstShow.ids.tmdb,
+      firstShow.season,
+      firstShow.number,
+    );
+  }
 
   let videoId = "";
 
-  const sources = [video.results, episodeVideo.results];
+  const sources = [
+    video ? video.results : [],
+    episodeVideo ? episodeVideo.results : [],
+  ];
+
   const findVideo = (source: any) =>
     Array.isArray(source)
       ? source.find((v: any) => v.site === "YouTube" && v.iso_3166_1 === "US")
@@ -94,38 +102,54 @@ function hero(itemData: ShowItem, videoId: string) {
           backgroundColor: "rgba(0,0,0,0.5)",
         }}
       />
-      <YoutubePlayer
-        videoId={videoId}
-        fallbackImg={itemData.background as string}
-      />
+      {videoId && (
+        <YoutubePlayer
+          videoId={videoId}
+          fallbackImg={itemData.background as string}
+        />
+      )}
       <div className="self-stretch h-full flex flex-col items-center justify-between z-10">
         <div className="self-stretch flex flex-row items-center justify-between">
           <div className="flex flex-col items-start justify-start gap-2">
             <div className="relative flex flex-row gap-2 font-medium text-gray-300">
-              Airing in
-              <span>
-                <CountDownTimer airsAt={itemData.airsAt} />
-              </span>
+              {itemData && itemData.title ? (
+                <span className="text-gray-300">
+                  Airing in{" "}
+                  <span>
+                    <CountDownTimer airsAt={itemData.airsAt} />
+                  </span>
+                </span>
+              ) : (
+                <span className="text-gray-300"></span>
+              )}
             </div>
             <div className="flex flex-col items-start justify-start gap-1 text-zinc-200">
               <h1 className="self-stretch relative text-4xl font-bold">
                 {itemData.show}
               </h1>
               <div className="self-stretch relative text-xl font-medium text-gray-100">
-                {`S${itemData.number
-                  .toString()
-                  .padStart(2, "0")}E${itemData.season
-                  .toString()
-                  .padStart(2, "0")}: ${itemData.title}`}
+                {itemData && itemData.title
+                  ? `S${
+                      itemData.number
+                        ? itemData.number.toString().padStart(2, "0")
+                        : "00"
+                    }E${
+                      itemData.season
+                        ? itemData.season.toString().padStart(2, "0")
+                        : "00"
+                    }: ${itemData.title}`
+                  : "No Upcoming"}
               </div>
             </div>
           </div>
           <Image
             src={
-              itemData.networkLogo.replace(
-                "/p/",
-                "/p/h50_filter(negate,000,666)/",
-              ) as string
+              itemData.networkLogo
+                ? (itemData.networkLogo.replace(
+                    "/p/",
+                    "/p/h50_filter(negate,000,666)/",
+                  ) as string)
+                : "default_image_path_here"
             }
             width={100}
             height={100}
